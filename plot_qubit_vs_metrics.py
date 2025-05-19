@@ -18,16 +18,17 @@ def plot_results(trials_results, convergence_curves, n):
     # -------------------------------------------------------------------------
     min_length = min(len(curve) for curve in convergence_curves)
     aligned_curves = np.array([curve[:min_length] for curve in convergence_curves])
-    #mean_convergence = np.mean(aligned_curves, axis=0)
+    # mean_convergence = np.mean(aligned_curves, axis=0)
 
     max_length = max(len(curve) for curve in convergence_curves)
     padded_curves = np.array(
-        [np.pad(curve, (0, max_length - len(curve)), constant_values=np.nan) for curve in convergence_curves]
+        [
+            np.pad(curve, (0, max_length - len(curve)), constant_values=np.nan)
+            for curve in convergence_curves
+        ]
     )
     # Compute mean convergence over aligned curves.
     mean_convergence = np.nanmean(padded_curves, axis=0)
-
-
 
     # Create a figure with two subplots (one for diff bits, one for convergence progress).
     plt.figure(figsize=(14, 5))
@@ -151,7 +152,7 @@ def plot_qubits_vs_metrics(
     random_guess_probs = [1 / (2**n) for n in qubit_counts]
     poly_line = [1 / (n) for n in qubit_counts]
     plt.plot(qubit_counts, random_guess_probs, "r--", label="Random guess (1/2ⁿ)")
-    plt.plot(qubit_counts, poly_line,"b-.", label="Polynomial line (1/n)")
+    plt.plot(qubit_counts, poly_line, "b-.", label="Polynomial line (1/n)")
     plt.xlabel("Number of Qubits")
     plt.ylabel("Mean Final Success Probability")
     plt.title("Mean Final Success Probability vs. Qubit Count")
@@ -160,7 +161,7 @@ def plot_qubits_vs_metrics(
     plt.tight_layout()
     fig = plt.gcf()  # Get the current figure object.
     plt.show()
-    return fig # Return the figure object for further manipulation if needed.
+    return fig  # Return the figure object for further manipulation if needed.
 
 
 # Example usage (this line can go inside your main or testing routine):
@@ -171,11 +172,11 @@ if __name__ == "__main__":
     n_min = 1
     n_max = 18
     options = {
-        "num_trials": 100,   # Total number of trials.
-        "n": 15,            # QUBO problem size.
+        "num_trials": 100,  # Total number of trials.
+        "n": 15,  # QUBO problem size.
         "max_iter": 500,  # Maximum number of iterations per trial.
         "pdiff": 0.01,
-        "precision": 3, # np.rounding precision. for 3 e.g. 0.521
+        "precision": 3,  # np.rounding precision. for 3 e.g. 0.521
         "dynamic_pdiff_policy": "none",  # 'none' | 'hoeffding' | 'scaledby2'
         "compute_qubit_weights_in_Q": False,  # True | False
         "locking": "no",  # 'yes' | 'no' | 'only_when_p0_increases'-use only with better precision
@@ -193,9 +194,6 @@ if __name__ == "__main__":
         locking=options["locking"],
     )
 
-
-
-        
     # -------------------------------------------------------------------------
     # Matplotlib configuration for consistent styling.
     # -------------------------------------------------------------------------
@@ -216,12 +214,11 @@ if __name__ == "__main__":
         }
     )
 
-    fig1 = plot_results(trials_results, convergence_curves,options["n"])
-    
+    fig1 = plot_results(trials_results, convergence_curves, options["n"])
+
     fig1.savefig(f"{options['file_name']}1.png", dpi=300)
     fig1.savefig(f"{options['file_name']}1.pdf", dpi=300)
 
-    
     # Now, run the qubit-dependent analysis.
     fig2 = plot_qubits_vs_metrics(
         n_min=n_min,
@@ -237,8 +234,8 @@ if __name__ == "__main__":
     fig2.savefig(f"{options['file_name']}2.png", dpi=300)
     fig2.savefig(f"{options['file_name']}2.pdf", dpi=300)
 
-
     # Save the dictionary to a text file in JSON format
     import json
+
     with open(f"{options['file_name']}-options.txt", "w") as file:
         json.dump(options, file, indent=4)

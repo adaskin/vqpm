@@ -100,13 +100,7 @@ def calculate_prob(psi, qubit):
 
 
 def prepare_new_state(
-    out_vec, 
-    n, 
-    q_states, 
-    pdiff=0.01, 
-    precision=3, 
-    qubit_weights=None, 
-    locking="yes"
+    out_vec, n, q_states, pdiff=0.01, precision=3, qubit_weights=None, locking="yes"
 ):
     """Generates a new state based on qubit probabilities.
     Args:
@@ -124,7 +118,7 @@ def prepare_new_state(
     # No locking
     if locking == "no":
         pdiff = 1
-  
+
     for q in range(1, n + 1):
         if q in q_states:
             state_q = q_states[q]
@@ -179,7 +173,7 @@ def hoeffding_pdiff(
     delta_i = delta_total / remaining_iters  # Union bound
 
     # Hoeffding bound: ε = sqrt(ln(2/δ)/(2M))
-    pdiff =  np.sqrt(np.log(2 / delta_i) / (20*num_qubits*shots_per_iter))
+    pdiff = np.sqrt(np.log(2 / delta_i) / (20 * num_qubits * shots_per_iter))
 
     return max(pdiff, lowest_threshold)
 
@@ -215,19 +209,16 @@ def dynamically_update_pdiff(
 
     elif dynamic_pdiff_policy == "scaledby2":
         pdiff = pdiff / 2**current_iter
-    
 
-    return max(pdiff,lowest_threshold)  # Ensure pdiff doesn't go below the threshold
-
-
+    return max(pdiff, lowest_threshold)  # Ensure pdiff doesn't go below the threshold
 
 
 ##########################################################################
 #########   Main simulatino function #######################
 ##########################################################################
 def vqpm_for_qubo(
-    u, # diagonal of unitary matrix for QUBO
-    n,  #number of parameters
+    u,  # diagonal of unitary matrix for QUBO
+    n,  # number of parameters
     expected_idx=None,  # target_state indx (if known) in the vec to follow its probs
     max_iter=20,
     pdiff=0.01,
@@ -297,13 +288,12 @@ def vqpm_for_qubo(
         ## NEW pdiff from Hoeffding
         if dynamic_pdiff_policy not in {None, "none", "None"}:
             pdiff = dynamically_update_pdiff(
-                        pdiff,
-                        current_iter=j,
-                        num_qubits=n,
-                        dynamic_pdiff_policy=dynamic_pdiff_policy,
-                        max_iter=max_iter,
-                    )
-
+                pdiff,
+                current_iter=j,
+                num_qubits=n,
+                dynamic_pdiff_policy=dynamic_pdiff_policy,
+                max_iter=max_iter,
+            )
 
         print(f"\niteration-{j} pdiff: {pdiff}")
 
@@ -402,9 +392,9 @@ if __name__ == "__main__":
         u,
         n,
         expected_idx=target_state,  # target_state indx (if known) in the vec to follow its probs
-        max_iter=30, #best 30
-        pdiff=0.01, #best 0.01
-        precision=3, #best 3
+        max_iter=30,  # best 30
+        pdiff=0.01,  # best 0.01
+        precision=3,  # best 3
         dynamic_pdiff_policy=None,  #'none' | 'hoeffding' | 'scaledby2',
         ###############################################################################
         qubit_weights=None,
@@ -441,7 +431,6 @@ if __name__ == "__main__":
     print(f"Expected state prob:   {probs[-1]:.4f}")
     print(f"for comparison: 1/2^n:  {1/(2**n):.4f}  1/n:{1/(n):.4f}")
 
-        
     # -------------------------------------------------------------------------
     # Matplotlib configuration for consistent styling.
     # -------------------------------------------------------------------------
@@ -479,7 +468,7 @@ if __name__ == "__main__":
     plt.plot(range(iters), probs, "o-", label="Algorithm")
     plt.axhline(1 / (2**n), color="r", linestyle="--", label="Random guess (1/2ⁿ)")
     plt.axhline(1 / (n), color="b", linestyle="-.", label="Polynomial line (1/n)")
-   
+
     plt.xlabel("Iteration")
     plt.ylabel("Success Probability")
     plt.title("Convergence Progress")

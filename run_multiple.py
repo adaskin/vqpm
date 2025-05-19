@@ -97,7 +97,7 @@ def run_multiple_trials(
     dynamic_pdiff_policy="none",  # 'none' | 'hoeffding' | 'scaledby2'
     compute_qubit_weights_in_Q=False,
     locking="no",  # 'yes' | 'no' | 'only_when_p0_increases'
-    trials=None # Optional: Provide a list of qubo matrices to run
+    trials=None,  # Optional: Provide a list of qubo matrices to run
 ):
     trials_results = []
     convergence_curves = []
@@ -107,7 +107,7 @@ def run_multiple_trials(
             Q = trials[trial]
         else:
             Q = None
-        
+
         result = run_vqpm_trial(
             n=n,
             max_iter=max_iter,
@@ -123,6 +123,7 @@ def run_multiple_trials(
 
     return trials_results, convergence_curves
 
+
 # =============================================================================
 # Main entry point to run experiments and plot results.
 # =============================================================================
@@ -131,11 +132,11 @@ if __name__ == "__main__":
     # np.random.seed(42)
     # Configuration parameters.
     options = {
-        "num_trials": 100,   # Total number of trials.
-        "n": 5,            # QUBO problem size.
+        "num_trials": 100,  # Total number of trials.
+        "n": 5,  # QUBO problem size.
         "max_iter": 30,  # Maximum number of iterations per trial.
         "pdiff": 0.01,
-        "precision": 3, # np.rounding precision. for 3 e.g. 0.51
+        "precision": 3,  # np.rounding precision. for 3 e.g. 0.51
         "dynamic_pdiff_policy": "none",  # 'none' | 'hoeffding' | 'scaledby2'
         "compute_qubit_weights_in_Q": False,
         "locking": "no",  # 'yes' | 'no' | 'only_when_p0_increases'-use only with better precision
@@ -152,7 +153,6 @@ if __name__ == "__main__":
         compute_qubit_weights_in_Q=options["compute_qubit_weights_in_Q"],
         locking=options["locking"],
     )
-
 
     from run_multiple import plot_results
 

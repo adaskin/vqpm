@@ -9,7 +9,6 @@ create unitary matrices from QUBO matrices, and adjust phases for quantum comput
 import numpy as np
 
 
-
 def random_qubo(n):
     """Generates random QUBO matrix.
     Args:
@@ -36,8 +35,6 @@ def adjust_unitary_phase(n, Q):
     phases = np.angle(u)  # Get eigenphases
     expected_state = np.argmin(phases)
     return Q_scaled, u, phases, expected_state
-
-
 
 
 def unitary_for_qubo(n, Q):

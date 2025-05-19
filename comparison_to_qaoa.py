@@ -266,20 +266,19 @@ def plot_bit_differences_as_bars(results, p=4, ax=None):
         mean_diff_q, color="r", linestyle="--", label=f"Mean QAOA= {mean_diff_q:.2f}"
     )
 
-
     fig = plt.gcf()  # Get the current figure object.
-    #plt.show()
+    # plt.show()
     return fig  # Return the figure object for further manipulation if needed.
 
 
 # =============================================================================
 
 
-def plot_final_probs(results, p=4, ax =None):
+def plot_final_probs(results, p=4, ax=None):
     """Generate a plot that compares the final probabilities over trials."""
     if ax is None:
         ax = plt.gca()
-    
+
     trials = range(len(results["final_prob_vqpm"]))
     ax.plot(trials, results["final_prob_vqpm"], "o", label="VQPM Final Probability")
     ax.plot(
@@ -298,9 +297,8 @@ def plot_final_probs(results, p=4, ax =None):
         mean_diff_q, color="r", linestyle="--", label=f"Mean QAOA= {mean_diff_q:.2f}"
     )
 
-
     fig = plt.gcf()  # Get the current figure object.
-    #plt.show()
+    # plt.show()
     return fig  # Return the figure object for further manipulation if needed.
 
 
@@ -310,15 +308,14 @@ def plot_final_probs(results, p=4, ax =None):
 if __name__ == "__main__":
     # For reproducibility (optional)
     np.random.seed(42)
-    # Set parameters    
-    n = 8 # Number of qubits
+    # Set parameters
+    n = 8  # Number of qubits
     # p for qubo
-    p = 8 # Number of layers in QAOA
+    p = 8  # Number of layers in QAOA
 
-    trials = 100 # Number of trials
+    trials = 100  # Number of trials
     trialQs = multiple_random_qubos(n, trials)
     # Generate random QUBO matrices
-
 
     # Run the comparisons
     results = compare_algorithms(trials=trials, n=n, p=p, trialQs=trialQs)
@@ -353,10 +350,10 @@ if __name__ == "__main__":
     plt.ylabel("Final Probability")
     plt.title("Final Probabilities of the Target States")
     plt.legend()
-    
+
     plt.grid(True)
     plt.tight_layout()
-    
+
     plt.subplot(1, 2, 2)
     fig2 = plot_bit_differences_as_bars(results, p)
     plt.xlabel("Trial")
@@ -364,14 +361,12 @@ if __name__ == "__main__":
     plt.title("Different Bits for Each Trial")
     plt.legend()
     plt.tight_layout()
- 
 
-  
-    #plt.figure(fig1)
-    #plt.figure(fig2)
+    # plt.figure(fig1)
+    # plt.figure(fig2)
     plt.tight_layout()
     plt.savefig(f"figures/vqpm_vs_qaoa_p{p}_n{n}.png", dpi=300)
     plt.savefig(f"figures/vqpm_vs_qaoa_p{p}_n{n}.pdf", dpi=300)
     plt.show()
 
-    #fig2.savefig(f"figures/vqpm_vs_qaoa_p{p}_bits.png")
+    # fig2.savefig(f"figures/vqpm_vs_qaoa_p{p}_bits.png")
