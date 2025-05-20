@@ -1,6 +1,6 @@
 # Variational Quantum Power Method (VQPM) for QUBO Problems
 
-**The code used for the paper:** **From Theory to Practice: Analyzing VQPM for Quantum Optimization of QUBO Problem, Ammar Daskin, May 2025.**
+**The code used for the paper:** **From Theory to Practice: Analyzing VQPM for Quantum Optimization of QUBO Problem, Ammar Daskin, May 2025, [https://arxiv.org/abs/2505.12990](https://arxiv.org/abs/2505.12990)**
 
 The main file for the simulation is `vqpm.y` which can be run alone. 
 
@@ -153,5 +153,5 @@ Adjust these in the `if __name__ == "__main__"` block of `vqpm.py`:
 ---
 
 ## 📚 References
-- From Theory to Practice: Analyzing VQPM for Quantum Optimization of QUBO Problem, Ammar Daskin, May 2025.
+- From Theory to Practice: Analyzing VQPM for Quantum Optimization of QUBO Problem, Ammar Daskin, May 2025, [https://arxiv.org/abs/2505.12990](https://arxiv.org/abs/2505.12990).
 -  Simulation code and this README file is written with the assistance from **DeepSeek/copilot**. 
