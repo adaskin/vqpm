@@ -12,23 +12,141 @@ from vqpm import (
 )
 from run_multiple import run_multiple_trials, run_vqpm_trial
 
-# --- End of helper functions ---
-
-# Import the QAOA class from our refactored code.
-# (Assume that the QAOA class defined earlier with expm and no history accumulation is in scope.)
 from scipy.linalg import expm
 from scipy.optimize import minimize
 
+import numpy as np
+import matplotlib.pyplot as plt
 
+# class QAOA:
+#     def __init__(self, Q):
+#         self.n = Q.shape[0]  # Number of qubits (assumed Q is n x n for an n-qubit QUBO)
+#         self.N = 2**self.n  # Hilbert space dimension
+#         self.Hp = self.create_problem_hamiltonian(Q)
+#         # self.Hm = self.create_mixer_hamiltonian()
+#     def create_problem_hamiltonian(self, Q):
+#         """Create a 1D diagonal Hamiltonian array from the QUBO matrix."""
+#         H = np.zeros(self.N)
+#         for k in range(self.N):
+#             b = bin(k)[2:].zfill(self.n)
+#             energy = 0.0
+#             for i in range(self.n):
+#                 for j in range(i, self.n):
+#                     if b[i] == "1" and b[j] == "1":
+#                         energy += Q[i, j]
+#             H[k] = energy
+#         return H  # REMOVE np.diag() here! Keep it as a 1D vector.
+
+#     def ansatz_layer(self, state, beta, gamma):
+#         # Apply problem Hamiltonian using clean, fast element-wise vector math
+#         state = state * np.exp(-1j * gamma * self.Hp)
+#         # Apply mixer Hamiltonian via single-qubit rotations
+#         state = self.apply_mixer(state, beta)
+#         return state
+
+#     def _expectation(self, params):
+#         """Return the expectation value using element-wise vector multiplication."""
+#         state = np.ones(self.N, dtype=complex) / np.sqrt(self.N)
+#         betas = params[: self.p]
+#         gammas = params[self.p :]
+#         for beta, gamma in zip(betas, gammas):
+#             state = self.ansatz_layer(state, beta, gamma)
+#         # Element-wise multiplication (*) instead of matrix multiplication (@)
+#         return np.real(np.vdot(state, self.Hp * state))
+#     # def create_problem_hamiltonian(self, Q):
+#     #     """Create diagonal Hamiltonian from the QUBO matrix."""
+#     #     H = np.zeros(self.N)
+#     #     for k in range(self.N):
+#     #         b = bin(k)[2:].zfill(self.n)
+#     #         energy = 0.0
+#     #         for i in range(self.n):
+#     #             for j in range(i, self.n):
+#     #                 if b[i] == "1" and b[j] == "1":
+#     #                     energy += Q[i, j]
+#     #         H[k] = energy
+#     #     return np.diag(H)
+
+#     def create_mixer_hamiltonian(self):
+#         """Construct the transverse field mixer Hamiltonian: sum of Pauli-X on each qubit."""
+#         X = np.array([[0, 1], [1, 0]])
+#         H = np.zeros((self.N, self.N))
+#         for i in range(self.n):
+#             ops = [np.eye(2) for _ in range(self.n)]
+#             ops[i] = X
+#             term = ops[0]
+#             for j in range(1, self.n):
+#                 term = np.kron(term, ops[j])
+#             H += term
+#         return H
+
+#     # def ansatz_layer(self, state, beta, gamma):
+#     #     # Apply problem Hamiltonian (diagonal phase)
+#     #     diag_Hp = np.diag(self.Hp)
+#     #     state = state * np.exp(-1j * gamma * diag_Hp)
+#     #     # Apply mixer Hamiltonian via single-qubit rotations
+#     #     state = self.apply_mixer(state, beta)
+#     #     return state
+
+#     def apply_mixer(self, state, beta):
+#         n_qubits = self.n
+#         gate = np.array(
+#             [[np.cos(beta), -1j * np.sin(beta)], [-1j * np.sin(beta), np.cos(beta)]]
+#         )
+#         for qubit in range(n_qubits):
+#             stride = 2**qubit
+#             for i in range(0, len(state), 2 ** (qubit + 1)):
+#                 for j in range(i, i + stride):
+#                     v0 = state[j]
+#                     v1 = state[j + stride]
+#                     state[j], state[j + stride] = (
+#                         gate[0, 0] * v0 + gate[0, 1] * v1,
+#                         gate[1, 0] * v0 + gate[1, 1] * v1,
+#                     )
+#         return state
+
+#     def run(self, p=1, maxiter=50):
+#         """Optimize QAOA parameters and return final state data."""
+#         self.p = p
+#         initial_params = np.random.rand(2 * p) * np.pi
+#         res = minimize(
+#             self._expectation,
+#             initial_params,
+#             method="L-BFGS-B",#"COBYLA", #"L-BFGS-B",
+#             options={"maxiter": maxiter},
+#         )
+#         self.optimal_params = res.x
+#         return self._final_state()
+
+#     # def _expectation(self, params):
+#     #     """Return the expectation value of the problem Hamiltonian."""
+#     #     state = np.ones(self.N, dtype=complex) / np.sqrt(
+#     #         self.N
+#     #     )  # Uniform superposition
+#     #     betas = params[: self.p]
+#     #     gammas = params[self.p :]
+#     #     for beta, gamma in zip(betas, gammas):
+#     #         state = self.ansatz_layer(state, beta, gamma)
+#     #     return np.real(np.vdot(state, self.Hp @ state))
+
+
+#     def _final_state(self):
+#         """Generate the final state from the optimized parameters."""
+#         state = np.ones(self.N, dtype=complex) / np.sqrt(self.N)
+#         betas = self.optimal_params[: self.p]
+#         gammas = self.optimal_params[self.p :]
+#         for beta, gamma in zip(betas, gammas):
+#             state = self.ansatz_layer(state, beta, gamma)
+#         self.probs = np.abs(state) ** 2
+#         self.optimal_state = int(np.argmax(self.probs))
+#         return self.optimal_state, self.probs
 class QAOA:
     def __init__(self, Q):
-        self.n = Q.shape[0]  # Number of qubits (assumed Q is n x n for an n-qubit QUBO)
+        self.n = Q.shape[0]  # Number of qubits
         self.N = 2**self.n  # Hilbert space dimension
         self.Hp = self.create_problem_hamiltonian(Q)
-        # self.Hm = self.create_mixer_hamiltonian()
 
     def create_problem_hamiltonian(self, Q):
-        """Create diagonal Hamiltonian from the QUBO matrix."""
+        """Create a 1D diagonal array representing the Hamiltonian (No dense matrices)."""
         H = np.zeros(self.N)
         for k in range(self.N):
             b = bin(k)[2:].zfill(self.n)
@@ -38,44 +156,38 @@ class QAOA:
                     if b[i] == "1" and b[j] == "1":
                         energy += Q[i, j]
             H[k] = energy
-        return np.diag(H)
-
-    def create_mixer_hamiltonian(self):
-        """Construct the transverse field mixer Hamiltonian: sum of Pauli-X on each qubit."""
-        X = np.array([[0, 1], [1, 0]])
-        H = np.zeros((self.N, self.N))
-        for i in range(self.n):
-            ops = [np.eye(2) for _ in range(self.n)]
-            ops[i] = X
-            term = ops[0]
-            for j in range(1, self.n):
-                term = np.kron(term, ops[j])
-            H += term
-        return H
+        return H  # REMOVED np.diag() -> Keeps it as a fast 1D vector
 
     def ansatz_layer(self, state, beta, gamma):
-        # Apply problem Hamiltonian (diagonal phase)
-        diag_Hp = np.diag(self.Hp)
-        state = state * np.exp(-1j * gamma * diag_Hp)
-        # Apply mixer Hamiltonian via single-qubit rotations
+        # Fully vectorized element-wise multiplication for Phase separation
+        state = state * np.exp(-1j * gamma * self.Hp)
+        # Apply the completely vectorized mixer
         state = self.apply_mixer(state, beta)
         return state
 
     def apply_mixer(self, state, beta):
-        n_qubits = self.n
+        """
+        Applies mixer Hamiltonian via completely vectorized axis manipulation.
+        Eliminates all internal Python loops.
+        """
         gate = np.array(
             [[np.cos(beta), -1j * np.sin(beta)], [-1j * np.sin(beta), np.cos(beta)]]
         )
-        for qubit in range(n_qubits):
+
+        for qubit in range(self.n):
             stride = 2**qubit
-            for i in range(0, len(state), 2 ** (qubit + 1)):
-                for j in range(i, i + stride):
-                    v0 = state[j]
-                    v1 = state[j + stride]
-                    state[j], state[j + stride] = (
-                        gate[0, 0] * v0 + gate[0, 1] * v1,
-                        gate[1, 0] * v0 + gate[1, 1] * v1,
-                    )
+            # Reshape array to isolate the target qubit dimension
+            reshaped = state.reshape(-1, 2, stride)
+            v0 = reshaped[:, 0, :]
+            v1 = reshaped[:, 1, :]
+
+            # Compute the linear combination using fast vector arithmetic
+            new_v0 = gate[0, 0] * v0 + gate[0, 1] * v1
+            new_v1 = gate[1, 0] * v0 + gate[1, 1] * v1
+
+            # Stack and flatten back to the state vector shape instantly
+            state = np.stack([new_v0, new_v1], axis=1).ravel()
+
         return state
 
     def run(self, p=1, maxiter=50):
@@ -85,22 +197,21 @@ class QAOA:
         res = minimize(
             self._expectation,
             initial_params,
-            method="COBYLA",
+            method="L-BFGS-B",  # "COBYLA", #"L-BFGS-B",#LBFGS gives better for shorter iterations
             options={"maxiter": maxiter},
         )
         self.optimal_params = res.x
         return self._final_state()
 
     def _expectation(self, params):
-        """Return the expectation value of the problem Hamiltonian."""
-        state = np.ones(self.N, dtype=complex) / np.sqrt(
-            self.N
-        )  # Uniform superposition
+        """Return the expectation value using element-wise vector operations O(2^n)."""
+        state = np.ones(self.N, dtype=complex) / np.sqrt(self.N)
         betas = params[: self.p]
         gammas = params[self.p :]
         for beta, gamma in zip(betas, gammas):
             state = self.ansatz_layer(state, beta, gamma)
-        return np.real(np.vdot(state, self.Hp @ state))
+        # Element-wise array multiplication (*) instead of dense matrix multiplication (@)
+        return np.real(np.vdot(state, self.Hp * state))
 
     def _final_state(self):
         """Generate the final state from the optimized parameters."""
@@ -112,10 +223,6 @@ class QAOA:
         self.probs = np.abs(state) ** 2
         self.optimal_state = int(np.argmax(self.probs))
         return self.optimal_state, self.probs
-
-
-import numpy as np
-import matplotlib.pyplot as plt
 
 
 def state_to_bin(state, n):
@@ -130,12 +237,6 @@ def multiple_random_qubos(n, num_of_qubos):
         Q = random_qubo(n)
         Qubos[i] = Q
     return Qubos
-
-
-# --- Provided helper function ---
-def state_to_bin(state, n):
-    """Convert an integer state to a binary string with n bits."""
-    return bin(state)[2:].zfill(n)
 
 
 # --- Main comparison functions ---
@@ -171,7 +272,7 @@ def compare_algorithms(trials=100, n=10, p=4, trialQs=None):
             u,
             n,
             expected_idx=target_state,
-            max_iter=20,
+            max_iter=30,
             pdiff=0.01,
             precision=3,
             dynamic_pdiff_policy=None,  # or "none" if preferred
@@ -207,7 +308,7 @@ def compare_algorithms(trials=100, n=10, p=4, trialQs=None):
         "bit_diff_qaoa": bit_diff_qaoa,
         "final_prob_vqpm": final_prob_vqpm,
         "final_prob_qaoa": final_prob_qaoa,
-        "final_prob_qaoa_max": final_prob_qaoa,
+        "final_prob_qaoa_max": final_prob_qaoa_max,
     }
 
 
@@ -303,9 +404,169 @@ def plot_final_probs(results, p=4, ax=None):
 
 
 # =============================================================================
+# %%
+def compare_scaling_across_n(n_values, trials=10, p_values=[2, 4, 6, 8]):
+    """
+    Compares VQPM and QAOA across different qubit counts (n) and QAOA layer depths (p).
+    Computes the average Hamming distance (different bits) and target state probabilities.
+
+    Parameters:
+    -----------
+    n_values : list of int
+        The qubit numbers to evaluate (e.g., [4, 6, 8, 10]).
+    trials : int
+        The number of random QUBO instances to average over for each n.
+    p_values : list of int
+        The QAOA depths (p) to evaluate.
+    """
+    # Structures to accumulate results across different values of n
+    scaling_results = {
+        "vqpm_bit_diff": [],
+        "vqpm_target_prob": [],
+        "qaoa_bit_diff": {p: [] for p in p_values},
+        "qaoa_target_prob": {p: [] for p in p_values},
+    }
+
+    for n in n_values:
+        print(f"Evaluating n = {n} qubits over {trials} trials...")
+
+        # Temporary lists to hold data for the current n
+        trial_vqpm_bits = []
+        trial_vqpm_probs = []
+
+        trial_qaoa_bits = {p: [] for p in p_values}
+        trial_qaoa_target_probs = {p: [] for p in p_values}
+
+        for trial in range(trials):
+            # Generate a fresh random QUBO instance for this trial
+            Q = random_qubo(n)
+            Q_adj, u, phases, target_state = adjust_unitary_phase(n, Q)
+
+            # --- Run VQPM ---
+            vqpm_state, vqpm_max_prob, q_states, _, vqpm_iters, vqpm_probs = (
+                vqpm_for_qubo(
+                    u,
+                    n,
+                    expected_idx=target_state,
+                    max_iter=30,
+                    pdiff=0.01,
+                    precision=3,
+                    dynamic_pdiff_policy=None,
+                    qubit_weights=None,
+                    locking="yes",
+                )
+            )
+
+            diff_v = target_state ^ vqpm_state
+            bit_diff_v = bin(diff_v)[2:].zfill(n).count("1")
+            trial_vqpm_bits.append(bit_diff_v)
+            trial_vqpm_probs.append(vqpm_probs[-1])  # Last probability in the sequence
+
+            # --- Run QAOA for each p value ---
+            qaoa = QAOA(Q_adj)
+            for p in p_values:
+                qaoa_state, qaoa_probs = qaoa.run(p=p, maxiter=500)
+
+                diff_q = target_state ^ qaoa_state
+                bit_diff_q = bin(diff_q)[2:].zfill(n).count("1")
+
+                trial_qaoa_bits[p].append(bit_diff_q)
+                trial_qaoa_target_probs[p].append(qaoa_probs[target_state])
+
+        # Compute and record the averages over all trials for this n
+        scaling_results["vqpm_bit_diff"].append(np.mean(trial_vqpm_bits))
+        scaling_results["vqpm_target_prob"].append(np.mean(trial_vqpm_probs))
+
+        for p in p_values:
+            scaling_results["qaoa_bit_diff"][p].append(np.mean(trial_qaoa_bits[p]))
+            scaling_results["qaoa_target_prob"][p].append(
+                np.mean(trial_qaoa_target_probs[p])
+            )
+
+    # -------------------------------------------------------------------------
+    # Matplotlib configuration for consistent styling matching your paper.
+    # -------------------------------------------------------------------------
+    plt.rcParams.update(
+        {
+            "font.size": 18,
+            "axes.titlesize": 18,
+            "axes.labelsize": 18,
+            "xtick.labelsize": 18,
+            "ytick.labelsize": 18,
+            "legend.fontsize": 14,  # Marginally smaller to accommodate more labels gracefully
+            "figure.titlesize": 18,
+            "figure.figsize": (14, 5),
+            "figure.dpi": 100,
+            "savefig.dpi": 300,
+            "lines.linewidth": 2,
+            "lines.markersize": 6,
+        }
+    )
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    # Unique marker and color configurations for each QAOA p depth
+    markers = {2: "s-", 4: "^-", 6: "v-", 8: "d-"}
+    colors = {2: "#ff7f0e", 4: "#2ca02c", 6: "#d62728", 8: "#9467bd"}
+
+    # --- Plot 1: Average Bit Differences vs n ---
+    ax1.plot(
+        n_values,
+        scaling_results["vqpm_bit_diff"],
+        "o-",
+        label="VQPM",
+        color="#1f77b4",
+        linewidth=3,
+    )
+    for p in p_values:
+        ax1.plot(
+            n_values,
+            scaling_results["qaoa_bit_diff"][p],
+            markers[p],
+            label=f"QAOA ($p={p}$)",
+            color=colors[p],
+        )
+    ax1.set_xlabel("Number of Qubits ($n$)")
+    ax1.set_ylabel("Avg. Different Bits")
+    ax1.set_title("Hamming Distance Scaling")
+    ax1.set_xticks(n_values)
+    ax1.grid(True, linestyle="--", alpha=0.5)
+    ax1.legend()
+
+    # --- Plot 2: Final Target State Probabilities vs n ---
+    ax2.plot(
+        n_values,
+        scaling_results["vqpm_target_prob"],
+        "o-",
+        label="VQPM",
+        color="#1f77b4",
+        linewidth=3,
+    )
+    for p in p_values:
+        ax2.plot(
+            n_values,
+            scaling_results["qaoa_target_prob"][p],
+            markers[p],
+            label=f"QAOA ($p={p}$)",
+            color=colors[p],
+        )
+    ax2.set_xlabel("Number of Qubits ($n$)")
+    ax2.set_ylabel("Avg. Target State Probability")
+    ax2.set_title("Target State Probability Scaling")
+    ax2.set_xticks(n_values)
+    ax2.grid(True, linestyle="--", alpha=0.5)
+    ax2.legend()
+
+    plt.tight_layout()
+    plt.savefig("figures/vqpm_vs_qaoa_scaling_n.png", dpi=300)
+    plt.savefig("figures/vqpm_vs_qaoa_scaling_n.pdf", dpi=300)
+    plt.show()
+
+    return scaling_results
+
 
 # ---- Main Routine ----
-if __name__ == "__main__":
+def main1():
     # For reproducibility (optional)
     np.random.seed(42)
     # Set parameters
@@ -370,3 +631,21 @@ if __name__ == "__main__":
     plt.show()
 
     # fig2.savefig(f"figures/vqpm_vs_qaoa_p{p}_bits.png")
+
+
+def main2():
+    np.random.seed(42)
+
+    # Define a range of qubit counts to test
+    n_values = np.arange(4, 21, 2)  # Extend to larger n for scaling analysis
+    trials = 20  # Number of trials per qubit size
+
+    # Run scaling analysis across different values of n and p
+    results = compare_scaling_across_n(
+        n_values=n_values, trials=trials, p_values=[2, 4, 6, 8]
+    )
+
+
+if __name__ == "__main__":
+    # main1()
+    main2()
