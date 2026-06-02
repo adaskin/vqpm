@@ -637,8 +637,8 @@ def main2():
     np.random.seed(42)
 
     # Define a range of qubit counts to test
-    n_values = np.arange(4, 21, 2)  # Extend to larger n for scaling analysis
-    trials = 20  # Number of trials per qubit size
+    n_values = np.arange(4, 17, 2)  # Extend to larger n for scaling analysis
+    trials = 10  # Number of trials per qubit size
 
     # Run scaling analysis across different values of n and p
     results = compare_scaling_across_n(
