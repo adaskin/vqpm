@@ -1,0 +1,116 @@
+# VQPM for Max‑Cut with Quantum–Classical Moment Duality
+
+This folder implements the **Variational Quantum Power Method (VQPM)** for Max‑Cut, together with a certification framework that maps the quantum state to a classical Goemans–Williamson (GW) moment matrix. The simulation is purely classical (using NumPy) but follows the same steps as a real quantum circuit.
+**this part is not yet put into the paper, but you can cite the original paper.**
+## Max‑Cut → QUBO mapping
+
+For a graph \(G=(V,E)\) with edge weights \(w_{ij}\), the Max‑Cut objective is
+
+```math
+\text{Cut}(x) = \sum_{(i,j)\in E} w_{ij} \cdot (x_i \neq x_j), \quad x_i \in \{0,1\}.
+```
+
+This is rewritten as a Quadratic Unconstrained Binary Optimization (QUBO) problem:
+
+```math
+H(x) = \sum_i q_{ii} x_i + \sum_{i<j} q_{ij} x_i x_j,
+```
+
+with  
+\(q_{ii} = \sum_j w_{ij}\) and \(q_{ij} = -2w_{ij}\) for \(i<j\).  
+The matrix \(Q\) is then used to construct a diagonal unitary
+
+```math
+U = \operatorname{diag}\bigl(e^{i\phi(x)}\bigr), \qquad 
+\phi(x) = \sum_{i\le j} q_{ij} x_i x_j,
+```
+
+where the phase \(\phi(x)\) is proportional to the energy of the binary string \(x\).
+
+## VQPM iteration with the \(I-U\) operator
+
+The power method aims to amplify the eigenvector with the **smallest** eigenphase of \(U\) (i.e., the maximum cut).  
+We use the operator \(I - U\) because its eigenvalues are \(1 - e^{i\lambda} = 2\sin(\lambda/2)\,e^{i(\lambda-\pi)/2}\), which is maximal when \(\lambda\) is minimal.  
+
+In each iteration of VQPM (simulated in `vqpm_for_qubo`):
+
+```math
+|\psi_0\rangle = \frac{|\text{in}\rangle}{\sqrt{2}}, \qquad 
+|\psi_1\rangle = -U\,|\psi_0\rangle,
+```
+
+```math
+|\psi_{\text{final}}\rangle = \frac{|\psi_0\rangle + |\psi_1\rangle}{\sqrt{2}} \;\propto\; (I - U)|\text{in}\rangle.
+```
+
+The state is then renormalised, measured to obtain single‑qubit probabilities, and **locked** (projected) when a qubit’s probability difference exceeds a threshold. The locked product state becomes the input for the next iteration.
+
+## Degeneracy and symmetry breaking
+
+Max‑Cut solutions are **doubly degenerate**: if \(x\) is an optimal cut, its bitwise complement \(\bar{x}\) gives the same cut value (e.g., `0101` and `1010` on a bipartite graph).  
+This global \(\mathbb{Z}_2\) symmetry can trap VQPM in a uniform superposition where no qubit locks.
+
+To break the symmetry without losing optimality, we **fix the first qubit to \(|1\rangle\)** from the very first iteration (see `break_symmetry_by_locking_qubit1=True`). Because for every optimal configuration with qubit 0 = 0 there is another with qubit 0 = 1, fixing it to 1 still allows the algorithm to reach a global optimum.
+
+## Simulation steps
+
+1. **Generate a random Max‑Cut instance** (`random_maxcut_qubo`).  
+   - Number of qubits \(n\) (default 14), edge probability \(p=0.5\), uniform unit weights.
+   - For \(n\le 20\), the exact Max‑Cut is computed by brute force.
+
+2. **Build the QUBO matrix and unitary** (`adjust_unitary_phase`).  
+   - Phases are scaled to lie in \([-\pi/4,\pi/4]\) and shifted by \(+\pi/4\) to ensure positive eigenvalues for the operator.
+
+3. **Run VQPM** (`vqpm_for_qubo`).  
+   - Initial state: equal superposition except first qubit fixed to \(|1\rangle\).  
+   - For up to `max_iter` iterations, apply the \((I-U)\) operator (in real quantum circuit this is ctrl-U, plus a measurement on the first qubit), measure, lock qubits, and re‑initialise.  
+   - Stop when the probability of any target (ground) state exceeds 0.99.
+
+4. **Compute moment‑based metrics** (`compute_sos_metrics`).  
+   - Build the \((n+1)\times(n+1)\) moment matrix
+     ```math
+     Y = \begin{pmatrix}
+     1 & \langle Z_1\rangle & \cdots & \langle Z_n\rangle \\
+     \langle Z_1\rangle & 1 & \cdots & \langle Z_1 Z_n\rangle \\
+     \vdots & \vdots & \ddots & \vdots \\
+     \langle Z_n\rangle & \langle Z_n Z_1\rangle & \cdots & 1
+     \end{pmatrix}.
+     ```
+   - Compute the quantum energy  
+     ```math
+     E_\rho = \sum_{(i,j)\in E} w_{ij}\,\frac{1 - Y_{ij}}{2}.
+     ```
+   - Compute the GW‑rounded bound  
+     ```math
+     F_{\text{GW}} = \sum_{(i,j)\in E} w_{ij}\,\frac{\arccos(Y_{ij})}{\pi}.
+     ```
+
+5. **Output and visualisation**  
+   - Console output: found state, optimality, probabilities, and deficit \(\Delta = \text{SDP}^* - E_\rho\).  
+   - Four‑panel figure saved as `vqpm_extended_sos_metrics.png`:
+       1. QUBO energy landscape.
+       2. Convergence of target and maximum probability.
+       3. Trajectory of \(E_\rho\), \(F_{\text{GW}}\), and the analytical floor \(\alpha_{\text{GW}}E_\rho\).
+       4. Ratio \(F_{\text{GW}}/\text{SDP}^*\) compared to \(\alpha_{\text{GW}}\).
+
+## Running the code
+
+```bash
+pip install numpy matplotlib cvxpy
+python vqpm_maxcut_trajectory.py
+```
+
+Adjust parameters at the bottom of the script (e.g., `n`, `p`, `max_iter`, `pdiff`).
+
+## Key theoretical guarantee
+
+For **any** quantum state \(\rho\) produced during VQPM, the moment matrix \(Y\) is a feasible point in the classical degree‑2 Sum‑of‑Squares cone. Consequently, the expected cut obtained by GW rounding satisfies
+
+```math
+\mathbb{E}[\text{Cut}] \;\ge\; \alpha_{\text{GW}}\; \langle H \rangle_\rho,
+```
+
+with \(\alpha_{\text{GW}} = 0.87856\). This certificate holds **even if the variational optimisation is incomplete** or locking is premature.
+
+
+
