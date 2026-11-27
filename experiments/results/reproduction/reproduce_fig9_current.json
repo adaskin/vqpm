@@ -1,0 +1,10 @@
+{
+ "impl": "current",
+ "fig9": {
+  "vqpm_prob": 0.4345802261772019,
+  "qaoa_prob": 0.5494944286109411,
+  "vqpm_bits": 0.43,
+  "qaoa_bits": 0.32,
+  "seconds": 1554.8377952575684
+ }
+}

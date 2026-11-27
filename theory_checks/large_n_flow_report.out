@@ -1,0 +1,237 @@
+Unlocked product-state map (first-order form), from the uniform start, 100 instances per n
+  n | ends at x_ref | still moving after 3e6 rounds | settled runs ending at a strict 1-flip local min | Hamming to x_ref (median, misses) | energy gap (median, misses) | rounds to converge (median) | /S | t_half (median, hits) | /S
+ 20 |   73% |   1 |  100% |  3.0 | 0.0131 |    13714 |  54.4 |    1982 |   8.1
+ 30 |   58% |   3 |  100% |  4.0 | 0.0131 |    44762 |  85.7 |    6572 |  12.3
+ 40 |   53% |   6 |  100% |  4.0 | 0.0091 |    60400 |  64.7 |   11937 |  12.7
+ 50 |   48% |   5 |  100% |  5.0 | 0.0080 |   106826 |  73.8 |   19790 |  13.7
+ 60 |   41% |   6 |  100% |  5.0 | 0.0091 |   165967 |  80.5 |   28992 |  14.2
+ 70 |   34% |   8 |  100% |  6.0 | 0.0070 |   182482 |  63.9 |   46472 |  16.5
+ 80 |   38% |  15 |  100% |  7.0 | 0.0068 |   275060 |  74.0 |   69658 |  18.4
+ 90 |   19% |  20 |  100% |  7.0 | 0.0061 |   359390 |  76.9 |  170479 |  36.4
+100 |   24% |  20 |  100% |  7.5 | 0.0061 |   563404 |  97.8 |  155226 |  27.2
+
+With locking (no rounding): runs that pass the code's test (x_ref reaches probability 1/2 before any lock contradicts it), %
+     p_diff |     20     30     40     50     60     70     80     90    100
+    none |    73%    58%    53%    48%    41%    34%    38%    19%    24%
+     0.2 |    61%    35%    31%    24%    19%     7%    11%     2%     5%
+    0.15 |    59%    34%    31%    22%    17%     7%    11%     2%     4%
+     0.1 |    59%    31%    29%    20%    17%     6%     9%     3%     3%
+    0.05 |    59%    31%    27%    20%    16%     6%     9%     3%     3%
+    0.01 |    54%    31%    24%    19%    14%     6%     8%     3%     3%
+   0.001 |    15%    13%    14%    12%    11%     7%     7%     1%     2%
+  0.0001 |     2%     0%     0%     0%     0%     0%     0%     0%     0%
+   1e-05 |     0%     0%     0%     0%     0%     0%     0%     0%     0%
+   1e-06 |     0%     0%     0%     0%     0%     0%     0%     0%     0%
+
+Runs ending at the unlocked end point x_inf, %
+     0.2 |    66%    46%    52%    37%    39%    23%    16%    11%    19%
+    0.15 |    64%    44%    49%    34%    37%    20%    16%    11%    16%
+     0.1 |    64%    43%    47%    29%    33%    18%    15%     9%    12%
+    0.05 |    64%    42%    45%    28%    32%    19%    12%     9%    10%
+    0.01 |    60%    41%    46%    27%    28%    19%    10%     8%    10%
+   0.001 |    17%    19%    30%    17%    19%    13%    10%     8%     8%
+  0.0001 |     2%     0%     0%     0%     0%     0%     0%     0%     0%
+   1e-05 |     0%     0%     0%     0%     0%     0%     0%     0%     0%
+   1e-06 |     0%     0%     0%     0%     0%     0%     0%     0%     0%
+
+Locks that agree with x_inf, % (mean over runs)
+     0.2 |    96%    96%    97%    96%    97%    97%    96%    96%    97%
+    0.15 |    96%    96%    97%    96%    97%    96%    96%    96%    96%
+     0.1 |    96%    95%    97%    96%    97%    96%    96%    96%    96%
+    0.05 |    96%    95%    96%    96%    97%    96%    95%    95%    96%
+    0.01 |    96%    95%    96%    95%    96%    96%    95%    95%    96%
+   0.001 |    89%    91%    94%    94%    95%    95%    95%    95%    95%
+  0.0001 |    81%    81%    84%    84%    84%    86%    86%    88%    89%
+   1e-05 |    81%    79%    82%    80%    80%    81%    81%    81%    81%
+   1e-06 |    81%    79%    81%    80%    80%    80%    80%    80%    80%
+
+Locks that agree with x_ref, % (mean over runs)
+     0.2 |    95%    92%    93%    92%    93%    93%    92%    91%    92%
+    0.15 |    94%    92%    93%    92%    93%    93%    92%    91%    92%
+     0.1 |    94%    92%    93%    92%    93%    93%    92%    91%    92%
+    0.05 |    95%    92%    92%    92%    92%    92%    92%    91%    92%
+    0.01 |    94%    92%    92%    92%    92%    92%    92%    91%    92%
+   0.001 |    86%    88%    91%    91%    91%    91%    91%    90%    91%
+  0.0001 |    79%    79%    82%    82%    82%    84%    84%    85%    86%
+   1e-05 |    79%    78%    80%    79%    79%    79%    79%    79%    79%
+   1e-06 |    79%    78%    79%    78%    78%    79%    78%    78%    78%
+
+Of the instances whose unlocked map ends at x_ref: share whose locked run still passes, %
+     0.2 |    77%    53%    57%    46%    46%    21%    29%    11%    12%
+    0.15 |    74%    53%    55%    44%    41%    21%    29%    11%    12%
+     0.1 |    74%    50%    51%    40%    41%    18%    24%    11%     8%
+    0.05 |    74%    50%    47%    40%    39%    18%    24%    11%     8%
+    0.01 |    68%    50%    43%    38%    34%    18%    21%    11%     8%
+   0.001 |    19%    22%    26%    23%    24%    15%    18%     5%     4%
+  0.0001 |     3%     0%     0%     0%     0%     0%     0%     0%     0%
+   1e-05 |     0%     0%     0%     0%     0%     0%     0%     0%     0%
+   1e-06 |     0%     0%     0%     0%     0%     0%     0%     0%     0%
+Of the instances whose unlocked map ends elsewhere: share whose locked run passes, %
+     0.2 |    19%    10%     2%     4%     0%     0%     0%     0%     3%
+    0.15 |    19%     7%     4%     2%     0%     0%     0%     0%     1%
+     0.1 |    19%     5%     4%     2%     0%     0%     0%     1%     1%
+    0.05 |    19%     5%     4%     2%     0%     0%     0%     1%     1%
+    0.01 |    15%     5%     2%     2%     0%     0%     0%     1%     1%
+   0.001 |     4%     0%     0%     2%     2%     3%     0%     0%     1%
+  0.0001 |     0%     0%     0%     0%     0%     0%     0%     0%     0%
+   1e-05 |     0%     0%     0%     0%     0%     0%     0%     0%     0%
+   1e-06 |     0%     0%     0%     0%     0%     0%     0%     0%     0%
+
+Split of the passing runs relative to the unlocked map (counts per 100): kept = unlocked ends at x_ref and the locked run passes; lost = unlocked ends at x_ref, locked run fails; rescued = unlocked misses, locked passes
+     0.2 |  56/ 17/  5  31/ 27/  4  30/ 23/  1  22/ 26/  2  19/ 22/  0   7/ 27/  0  11/ 27/  0   2/ 17/  0   3/ 21/  2
+    0.15 |  54/ 19/  5  31/ 27/  3  29/ 24/  2  21/ 27/  1  17/ 24/  0   7/ 27/  0  11/ 27/  0   2/ 17/  0   3/ 21/  1
+     0.1 |  54/ 19/  5  29/ 29/  2  27/ 26/  2  19/ 29/  1  17/ 24/  0   6/ 28/  0   9/ 29/  0   2/ 17/  1   2/ 22/  1
+    0.05 |  54/ 19/  5  29/ 29/  2  25/ 28/  2  19/ 29/  1  16/ 25/  0   6/ 28/  0   9/ 29/  0   2/ 17/  1   2/ 22/  1
+    0.01 |  50/ 23/  4  29/ 29/  2  23/ 30/  1  18/ 30/  1  14/ 27/  0   6/ 28/  0   8/ 30/  0   2/ 17/  1   2/ 22/  1
+   0.001 |  14/ 59/  1  13/ 45/  0  14/ 39/  0  11/ 37/  1  10/ 31/  1   5/ 29/  2   7/ 31/  0   1/ 18/  0   1/ 23/  1
+  0.0001 |   2/ 71/  0   0/ 58/  0   0/ 53/  0   0/ 48/  0   0/ 41/  0   0/ 34/  0   0/ 38/  0   0/ 19/  0   0/ 24/  0
+   1e-05 |   0/ 73/  0   0/ 58/  0   0/ 53/  0   0/ 48/  0   0/ 41/  0   0/ 34/  0   0/ 38/  0   0/ 19/  0   0/ 24/  0
+   1e-06 |   0/ 73/  0   0/ 58/  0   0/ 53/  0   0/ 48/  0   0/ 41/  0   0/ 34/  0   0/ 38/  0   0/ 19/  0   0/ 24/  0
+
+Unlocked runs that pass the code's test (t_half reached) but do not end at x_ref, count per 100
+    none |      0      0      0      0      0      0      0      0      0
+
+Rounds until all qubits are locked or the free ones have converged (median)
+    none |  13714  44762  60400 106826 165967 182482 275060 359390 563404
+     0.2 |    978   2631   3752   6337   9532  11630  16129  21744  23148
+    0.15 |    704   2074   3010   4538   6992   8244  12908  16116  18091
+     0.1 |    476   1508   1924   3256   4712   5966   8200  10759  11668
+    0.05 |    236    760   1072   1577   2184   2833   4230   5605   6202
+    0.01 |     53    132    200    295    456    542    786   1034   1271
+   0.001 |      4     11     20     32     50     52     78    108    116
+  0.0001 |      1      2      2      3      4      5      6      8     10
+   1e-05 |      1      1      1      1      2      2      2      2      2
+   1e-06 |      1      1      1      1      1      1      1      1      1
+
+Round in which x_ref first reaches probability 1/2, passing runs (median)
+    none |   1982   6572  11937  19790  28992  46472  69658 170479 155226
+     0.2 |    557   1247   1948   3460   5620   6639   8201   8748  19305
+    0.15 |    424    913   1509   2640   4256   4973   6091   6674  15304
+     0.1 |    276    585    966   1761   2834   3708   4068   5123   9600
+    0.05 |    144    302    476    878   1248   1942   2097   2553   4775
+    0.01 |     30     63     98    180    224    400    444    525    958
+   0.001 |      3      7     13     14     24     51     37     57     88
+  0.0001 |      2    nan    nan    nan    nan    nan    nan    nan    nan
+   1e-05 |    nan    nan    nan    nan    nan    nan    nan    nan    nan
+   1e-06 |    nan    nan    nan    nan    nan    nan    nan    nan    nan
+
+Round of the first lock (median)
+     0.2 |     40     70    104    136    182    226    272    322    377
+    0.15 |     30     52     78    102    136    168    203    239    281
+     0.1 |     20     35     52     68     90    112    135    158    188
+    0.05 |     10     18     26     34     45     56     68     80     94
+    0.01 |      2      4      6      7      9     12     14     16     19
+   0.001 |      1      1      1      1      1      2      2      2      2
+  0.0001 |      1      1      1      1      1      1      1      1      1
+   1e-05 |      1      1      1      1      1      1      1      1      1
+   1e-06 |      1      1      1      1      1      1      1      1      1
+
+Signs that locking reads, on the unlocked run: the sign of 2 pi_i - 1 when |2 pi_i - 1| first exceeds p,
+compared with the centre gradient -sign g_i(1/2) (= sign of round-1 D_i), the linear prediction
+delta(t) = -(I - A^t) J^{-1} g0 at the same round, the unlocked end point x_inf and x_ref (share of qubits).
+tau = 4/(eta0 |mu_min(J)|); 'flips' = reads against the centre gradient, 'lin on flips' = share of them predicted
+n =  20  tau median 275 = 3.08 n^1.5 = 1.12 S | x_inf agrees with grad 0.81, x_ref with grad 0.79
+   p=1e-06   t/tau  0.004 | grad 1.000  lin 1.000  inf 0.807  ref 0.788 | lin on flips nan of 0
+   p=1e-05   t/tau  0.004 | grad 0.999  lin 1.000  inf 0.808  ref 0.788 | lin on flips 1.00 of 2
+   p=0.0001  t/tau  0.004 | grad 0.996  lin 1.000  inf 0.811  ref 0.790 | lin on flips 1.00 of 8
+   p=0.001   t/tau  0.004 | grad 0.986  lin 1.000  inf 0.821  ref 0.800 | lin on flips 1.00 of 29
+   p=0.01    t/tau  0.024 | grad 0.955  lin 1.000  inf 0.847  ref 0.823 | lin on flips 1.00 of 91
+   p=0.05    t/tau  0.114 | grad 0.902  lin 0.992  inf 0.893  ref 0.861 | lin on flips 0.97 of 197
+   p=0.1     t/tau  0.228 | grad 0.874  lin 0.985  inf 0.915  ref 0.880 | lin on flips 0.96 of 252
+   p=0.15    t/tau  0.347 | grad 0.856  lin 0.978  inf 0.933  ref 0.898 | lin on flips 0.95 of 288
+   p=0.2     t/tau  0.460 | grad 0.843  lin 0.971  inf 0.947  ref 0.910 | lin on flips 0.94 of 314
+n =  30  tau median 475 = 2.89 n^1.5 = 0.88 S | x_inf agrees with grad 0.79, x_ref with grad 0.78
+   p=1e-06   t/tau  0.002 | grad 1.000  lin 1.000  inf 0.786  ref 0.776 | lin on flips 1.00 of 1
+   p=1e-05   t/tau  0.002 | grad 0.997  lin 1.000  inf 0.787  ref 0.777 | lin on flips 1.00 of 9
+   p=0.0001  t/tau  0.002 | grad 0.994  lin 1.000  inf 0.789  ref 0.778 | lin on flips 1.00 of 18
+   p=0.001   t/tau  0.004 | grad 0.983  lin 1.000  inf 0.797  ref 0.786 | lin on flips 1.00 of 50
+   p=0.01    t/tau  0.026 | grad 0.952  lin 0.999  inf 0.821  ref 0.806 | lin on flips 0.99 of 144
+   p=0.05    t/tau  0.129 | grad 0.893  lin 0.993  inf 0.872  ref 0.849 | lin on flips 0.99 of 322
+   p=0.1     t/tau  0.254 | grad 0.866  lin 0.984  inf 0.898  ref 0.866 | lin on flips 0.97 of 403
+   p=0.15    t/tau  0.382 | grad 0.852  lin 0.980  inf 0.914  ref 0.880 | lin on flips 0.97 of 444
+   p=0.2     t/tau  0.513 | grad 0.838  lin 0.970  inf 0.929  ref 0.889 | lin on flips 0.95 of 486
+n =  40  tau median 704 = 2.78 n^1.5 = 0.75 S | x_inf agrees with grad 0.81, x_ref with grad 0.79
+   p=1e-06   t/tau  0.001 | grad 1.000  lin 1.000  inf 0.813  ref 0.794 | lin on flips 1.00 of 2
+   p=1e-05   t/tau  0.001 | grad 0.999  lin 1.000  inf 0.814  ref 0.795 | lin on flips 1.00 of 4
+   p=0.0001  t/tau  0.001 | grad 0.995  lin 1.000  inf 0.816  ref 0.798 | lin on flips 1.00 of 21
+   p=0.001   t/tau  0.003 | grad 0.986  lin 1.000  inf 0.825  ref 0.805 | lin on flips 1.00 of 56
+   p=0.01    t/tau  0.026 | grad 0.957  lin 0.998  inf 0.849  ref 0.824 | lin on flips 0.98 of 171
+   p=0.05    t/tau  0.131 | grad 0.911  lin 0.991  inf 0.888  ref 0.859 | lin on flips 0.98 of 355
+   p=0.1     t/tau  0.259 | grad 0.883  lin 0.983  inf 0.915  ref 0.879 | lin on flips 0.97 of 468
+   p=0.15    t/tau  0.383 | grad 0.864  lin 0.976  inf 0.935  ref 0.894 | lin on flips 0.95 of 546
+   p=0.2     t/tau  0.511 | grad 0.852  lin 0.970  inf 0.948  ref 0.905 | lin on flips 0.94 of 592
+n =  50  tau median 966 = 2.73 n^1.5 = 0.66 S | x_inf agrees with grad 0.80, x_ref with grad 0.78
+   p=1e-06   t/tau  0.001 | grad 1.000  lin 1.000  inf 0.798  ref 0.783 | lin on flips 1.00 of 1
+   p=1e-05   t/tau  0.001 | grad 0.999  lin 1.000  inf 0.799  ref 0.784 | lin on flips 1.00 of 6
+   p=0.0001  t/tau  0.001 | grad 0.997  lin 1.000  inf 0.801  ref 0.786 | lin on flips 1.00 of 17
+   p=0.001   t/tau  0.003 | grad 0.985  lin 1.000  inf 0.810  ref 0.796 | lin on flips 1.00 of 75
+   p=0.01    t/tau  0.026 | grad 0.950  lin 0.999  inf 0.838  ref 0.821 | lin on flips 0.99 of 250
+   p=0.05    t/tau  0.130 | grad 0.894  lin 0.992  inf 0.888  ref 0.863 | lin on flips 0.97 of 528
+   p=0.1     t/tau  0.259 | grad 0.864  lin 0.986  inf 0.916  ref 0.884 | lin on flips 0.96 of 679
+   p=0.15    t/tau  0.387 | grad 0.851  lin 0.979  inf 0.931  ref 0.896 | lin on flips 0.96 of 745
+   p=0.2     t/tau  0.514 | grad 0.840  lin 0.973  inf 0.942  ref 0.903 | lin on flips 0.94 of 802
+n =  60  tau median 1250 = 2.69 n^1.5 = 0.60 S | x_inf agrees with grad 0.80, x_ref with grad 0.78
+   p=1e-06   t/tau  0.001 | grad 0.999  lin 1.000  inf 0.797  ref 0.782 | lin on flips 1.00 of 4
+   p=1e-05   t/tau  0.001 | grad 0.998  lin 1.000  inf 0.799  ref 0.784 | lin on flips 1.00 of 12
+   p=0.0001  t/tau  0.001 | grad 0.992  lin 1.000  inf 0.804  ref 0.788 | lin on flips 1.00 of 48
+   p=0.001   t/tau  0.003 | grad 0.981  lin 1.000  inf 0.812  ref 0.795 | lin on flips 1.00 of 116
+   p=0.01    t/tau  0.027 | grad 0.946  lin 0.999  inf 0.838  ref 0.818 | lin on flips 0.99 of 326
+   p=0.05    t/tau  0.132 | grad 0.895  lin 0.994  inf 0.885  ref 0.858 | lin on flips 0.98 of 633
+   p=0.1     t/tau  0.264 | grad 0.863  lin 0.983  inf 0.915  ref 0.883 | lin on flips 0.95 of 823
+   p=0.15    t/tau  0.389 | grad 0.845  lin 0.974  inf 0.935  ref 0.899 | lin on flips 0.93 of 931
+   p=0.2     t/tau  0.526 | grad 0.832  lin 0.967  inf 0.949  ref 0.905 | lin on flips 0.92 of 1006
+n =  70  tau median 1557 = 2.66 n^1.5 = 0.55 S | x_inf agrees with grad 0.80, x_ref with grad 0.79
+   p=1e-06   t/tau  0.001 | grad 1.000  lin 1.000  inf 0.804  ref 0.787 | lin on flips nan of 0
+   p=1e-05   t/tau  0.001 | grad 0.999  lin 1.000  inf 0.805  ref 0.788 | lin on flips 1.00 of 9
+   p=0.0001  t/tau  0.001 | grad 0.994  lin 1.000  inf 0.809  ref 0.792 | lin on flips 1.00 of 39
+   p=0.001   t/tau  0.003 | grad 0.982  lin 1.000  inf 0.818  ref 0.800 | lin on flips 0.99 of 126
+   p=0.01    t/tau  0.027 | grad 0.954  lin 0.999  inf 0.839  ref 0.818 | lin on flips 0.99 of 323
+   p=0.05    t/tau  0.135 | grad 0.899  lin 0.991  inf 0.887  ref 0.857 | lin on flips 0.97 of 708
+   p=0.1     t/tau  0.268 | grad 0.869  lin 0.984  inf 0.913  ref 0.879 | lin on flips 0.95 of 917
+   p=0.15    t/tau  0.399 | grad 0.851  lin 0.976  inf 0.931  ref 0.895 | lin on flips 0.94 of 1042
+   p=0.2     t/tau  0.529 | grad 0.840  lin 0.970  inf 0.944  ref 0.905 | lin on flips 0.93 of 1118
+n =  80  tau median 1894 = 2.65 n^1.5 = 0.51 S | x_inf agrees with grad 0.80, x_ref with grad 0.78
+   p=1e-06   t/tau  0.001 | grad 1.000  lin 1.000  inf 0.797  ref 0.783 | lin on flips 1.00 of 1
+   p=1e-05   t/tau  0.001 | grad 0.998  lin 1.000  inf 0.797  ref 0.783 | lin on flips 1.00 of 15
+   p=0.0001  t/tau  0.001 | grad 0.994  lin 1.000  inf 0.800  ref 0.787 | lin on flips 1.00 of 50
+   p=0.001   t/tau  0.003 | grad 0.983  lin 1.000  inf 0.809  ref 0.795 | lin on flips 1.00 of 138
+   p=0.01    t/tau  0.027 | grad 0.948  lin 0.999  inf 0.838  ref 0.819 | lin on flips 0.99 of 420
+   p=0.05    t/tau  0.133 | grad 0.895  lin 0.993  inf 0.879  ref 0.854 | lin on flips 0.98 of 843
+   p=0.1     t/tau  0.263 | grad 0.864  lin 0.983  inf 0.908  ref 0.878 | lin on flips 0.96 of 1085
+   p=0.15    t/tau  0.396 | grad 0.846  lin 0.972  inf 0.926  ref 0.892 | lin on flips 0.94 of 1232
+   p=0.2     t/tau  0.526 | grad 0.835  lin 0.965  inf 0.940  ref 0.901 | lin on flips 0.93 of 1320
+n =  90  tau median 2256 = 2.64 n^1.5 = 0.48 S | x_inf agrees with grad 0.80, x_ref with grad 0.78
+   p=1e-06   t/tau  0.000 | grad 0.999  lin 1.000  inf 0.802  ref 0.781 | lin on flips 1.00 of 5
+   p=1e-05   t/tau  0.000 | grad 0.998  lin 1.000  inf 0.803  ref 0.782 | lin on flips 1.00 of 22
+   p=0.0001  t/tau  0.000 | grad 0.995  lin 1.000  inf 0.806  ref 0.784 | lin on flips 1.00 of 47
+   p=0.001   t/tau  0.003 | grad 0.982  lin 1.000  inf 0.816  ref 0.792 | lin on flips 1.00 of 160
+   p=0.01    t/tau  0.027 | grad 0.949  lin 0.999  inf 0.842  ref 0.817 | lin on flips 1.00 of 463
+   p=0.05    t/tau  0.135 | grad 0.898  lin 0.991  inf 0.886  ref 0.851 | lin on flips 0.97 of 921
+   p=0.1     t/tau  0.270 | grad 0.865  lin 0.985  inf 0.914  ref 0.876 | lin on flips 0.96 of 1217
+   p=0.15    t/tau  0.402 | grad 0.849  lin 0.976  inf 0.931  ref 0.886 | lin on flips 0.95 of 1361
+   p=0.2     t/tau  0.530 | grad 0.837  lin 0.968  inf 0.944  ref 0.896 | lin on flips 0.93 of 1463
+n = 100  tau median 2610 = 2.61 n^1.5 = 0.46 S | x_inf agrees with grad 0.80, x_ref with grad 0.78
+   p=1e-06   t/tau  0.000 | grad 1.000  lin 1.000  inf 0.799  ref 0.780 | lin on flips 1.00 of 1
+   p=1e-05   t/tau  0.000 | grad 0.998  lin 1.000  inf 0.800  ref 0.781 | lin on flips 1.00 of 16
+   p=0.0001  t/tau  0.000 | grad 0.995  lin 1.000  inf 0.803  ref 0.784 | lin on flips 1.00 of 51
+   p=0.001   t/tau  0.003 | grad 0.983  lin 1.000  inf 0.812  ref 0.791 | lin on flips 1.00 of 174
+   p=0.01    t/tau  0.028 | grad 0.946  lin 0.998  inf 0.842  ref 0.818 | lin on flips 0.99 of 543
+   p=0.05    t/tau  0.136 | grad 0.895  lin 0.991  inf 0.885  ref 0.856 | lin on flips 0.98 of 1052
+   p=0.1     t/tau  0.274 | grad 0.865  lin 0.983  inf 0.912  ref 0.878 | lin on flips 0.96 of 1354
+   p=0.15    t/tau  0.407 | grad 0.847  lin 0.976  inf 0.931  ref 0.892 | lin on flips 0.95 of 1527
+   p=0.2     t/tau  0.538 | grad 0.837  lin 0.969  inf 0.941  ref 0.901 | lin on flips 0.94 of 1626
+
+fitted exponent of tau in n: 1.40
+
+fitted exponents in n: unlocked t_half 2.71, unlocked rounds 2.14, S 1.96
+  p_diff 0.2: rounds to finish 1.97, t_half (passing) 2.04, first lock 1.39
+  p_diff 0.1: rounds to finish 1.95, t_half (passing) 2.10, first lock 1.38
+  p_diff 0.01: rounds to finish 1.93, t_half (passing) 2.07, first lock 1.35
+  p_diff 0.001: rounds to finish 2.08, t_half (passing) 2.00, first lock 0.55
+
+Check against sampled VQPM (large_n_sweep.json, same instances): pass rate first-order / sampled, and per-instance agreement
+    0.01 |  54/ 53  31/ 29  24/ 25  19/ 19  14/ 14   6/  5   8/  8   3/  3   3/  3 | agreement 99.0%
+   0.001 |  15/ 15  13/ 13  14/ 13  12/ 12  11/ 11   7/  4   7/  6   1/  2   2/  3 | agreement 98.3%
+  0.0001 |   2/  2   0/  0   0/  0   0/  0   0/  0   0/  0   0/  0   0/  0   0/  0 | agreement 100.0%
+   1e-05 |   0/  0   0/  0   0/  0   0/  0   0/  0   0/  0   0/  0   0/  0   0/  0 | agreement 100.0%
+figure written to paper/figures/app_flow.pdf

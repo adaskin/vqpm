@@ -11,46 +11,36 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+import os as _os
+import sys as _sys
+
+_ROOT = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+if _ROOT not in _sys.path:
+    _sys.path.insert(0, _ROOT)
+from vqpm import qubo_energies as _qubo_energies  # noqa: E402
+
+
 def unitary_for_qubo(n, Q):
-    """Creates diagonal unitary matrix for QUBO.
+    """Creates diagonal unitary matrix for QUBO (vectorised; bit-for-bit
+    equal to the former loop, see vqpm.qubo_energies).
     Args:
         n (int): Number of qubits.
         Q (matrix): QUBO matrix.
     Returns:
         array: Diagonal of unitary matrix.
     """
-    num_terms = 2**n
-    u = np.ones(num_terms, dtype=complex)
-    for k in range(num_terms):
-        b = bin(k)[2:].zfill(n)
-        phase = 0.0
-        for i in range(n):
-            for j in range(i, n):
-                if b[i] == "1" and b[j] == "1":
-                    phase += Q[i][j]
-        u[k] = np.exp(1j * phase)
-    return u
+    return np.exp(1j * _qubo_energies(n, Q))
 
 
 def test_u_for_qubo(n, Q):
-    """Validates unitary construction.
+    """QUBO values of all basis states (vectorised).
     Args:
         n (int): Number of qubits.
         Q (matrix): QUBO matrix.
     Returns:
         array: Test values.
     """
-    num_terms = 2**n
-    test_vals = np.zeros(num_terms)
-    for k in range(num_terms):
-        b = bin(k)[2:].zfill(n)
-        total = 0.0
-        for i in range(n):
-            for j in range(i, n):
-                if b[i] == "1" and b[j] == "1":
-                    total += Q[i][j]
-        test_vals[k] = total
-    return test_vals
+    return _qubo_energies(n, Q)
 
 
 def random_qubo(n):

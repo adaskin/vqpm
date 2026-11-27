@@ -1,0 +1,8 @@
+# Pinned direct dependencies (Python 3.12.12). Full environment: requirements-lock.txt
+matplotlib==3.11.2
+numpy==2.5.5
+pytest==9.2.0
+qiskit==2.6.2
+qiskit-aer==0.18.4
+qiskit-ibm-runtime==0.52.1
+scipy==1.18.1
