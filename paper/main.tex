@@ -7,7 +7,6 @@
 
 \usepackage[numbers,sort&compress]{natbib}
 
-\usepackage{qcircuit}
 \usepackage{graphicx}%
 \graphicspath{{./figures/}}
 \usepackage{amsmath,amssymb,amsfonts,amsthm}%
@@ -18,12 +17,10 @@
 \usepackage{tikz,lmodern}
 \usetikzlibrary{positioning, shapes, arrows.meta, calc, decorations.pathreplacing}
 \usetikzlibrary{matrix,arrows.meta, positioning, fit, backgrounds}
-\usepackage{adjustbox}
 
 \usepackage{enumerate}
 \usepackage{caption}
 \usepackage{subcaption}
-\usepackage[most]{tcolorbox}
 
 \usepackage{authblk}
 \usepackage{placeins}
@@ -35,7 +32,6 @@
 \newcommand{\wmc}[1]{\ensuremath{\widetilde{\mathcal{#1}}}}
 \renewcommand{\bf}[1]{\ensuremath{\mathbf{#1}}}
 \newcommand{\norm}[1]{\ensuremath{\lVert#1\rVert }}
-\newcommand{\revfix}[1]{{#1}}
 \let\vec\mathbf
 \newtheorem{proposition}{Proposition}[section]
 \newtheorem{lemma}[proposition]{Lemma}
@@ -43,6 +39,7 @@
 \newtheorem{remark}[proposition]{Remark}
 \theoremstyle{plain}
 \usepackage{orcidlink}
+\providecommand{\orcidlink}[1]{}% for HTML converters without orcidlink
 \begin{document}
 \title{From Theory to Practice: Analyzing Variational Quantum Power Method for Quantum Optimization of QUBO Problems}
 \author{Ammar Daskin\orcidlink{0000-0002-1497-5031}\thanks{adaskin25@gmail.com}}
@@ -194,14 +191,9 @@ This section outlines VQPM~\cite{daskin2021combinatorial}, states the update it 
 \subsection{Parameterized input state and the VQPM update}
 In VQPM, to reduce the number of iterations in the standard power iteration, the algorithm is converted into a variational circuit by adding rotational-$Y$ gates to the qubits representing eigenstates. 
 This allows the state to be reinitialized by feeding the measurement outcomes (the approximate tomography) of the previous iterations. The algorithm at the $k$ iteration can simply be represented by the following circuit:
-\[
-\Qcircuit @C=1em @R=0.5em {
-\lstick{\ket{0}} & \gate{H} &\qw & \ctrl{1} & \gate{H} & \meter  & \qw & \rstick{\ket{0}} \\
-\lstick{\ket{0}} & \gate{R_y (\theta_0^{(k-1)})} &\qw & \multigate{2}{\mathcal{U}}& \qw  &  \meter   & \cw  & \cw &\rstick{\theta_0^{(k)}} \\
-\lstick{\ket{0}} & \gate{R_y (\theta_1^{(k-1)})} &\qw & \ghost{U}& \qw & \meter &\cw &\cw &\rstick{\theta_1^{(k)}} \\
-\lstick{\ket{0}} & \gate{R_y (\theta_2^{(k-1)})} &\qw & \ghost{U}& \qw & \meter & \cw & \cw &\rstick{\theta_2^{(k)}} \\
-}
-\]
+\begin{center}
+\includegraphics{vqpm_circuit.pdf}
+\end{center}
 For QUBO problems, we simply express \( \ket{\psi_0} \) in the eigenbasis \( \{\ket{j}\} \) and start with the vector:
 \begin{equation}
     \ket{\psi_0} = \sum_j \alpha_j \ket{j}, \quad \alpha_j = \frac{1}{\sqrt{2^n}}.
