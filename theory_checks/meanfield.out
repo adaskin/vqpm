@@ -1,0 +1,3 @@
+First-order map vs exact map, no locking, from the uniform start (tol 1e-4, stable vertex)
+n =  8: same end point 29/30; end point is the optimum: first-order 28, exact 27; rounds (median) first-order 2515, exact 2493, ratio 1.00
+n = 12: same end point 30/30; end point is the optimum: first-order 25, exact 25; rounds (median) first-order 7923, exact 8217, ratio 1.00

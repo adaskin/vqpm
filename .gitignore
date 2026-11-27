@@ -399,3 +399,20 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+## Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# raw experiment outputs (summaries/plots are committed explicitly)
+experiments/results/**/raw/
+experiments/results/smoke/
+experiments/logs/
+experiments/results/smoke*/
+# large per-run tables (regenerate with --plot-only; raw data is backed up)
+experiments/results/vqpm_grid/vqpm_grid_runs.csv
+experiments/results/vqpm_grid/vqpm_grid_locks.csv
+experiments/results/*/*_runs.csv
+# uncompressed copies of the gzipped theory-check outputs (the scripts read either form)
+theory_checks/*.json

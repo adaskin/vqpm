@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from vqpm import (
+    qubo_energies,
     random_qubo,
     adjust_unitary_phase,
     unitary_for_qubo,
@@ -139,24 +140,50 @@ import matplotlib.pyplot as plt
 #         self.probs = np.abs(state) ** 2
 #         self.optimal_state = int(np.argmax(self.probs))
 #         return self.optimal_state, self.probs
+QAOA_OPTIMIZERS = ("L-BFGS-B", "COBYLA", "gd", "adam")
+
+# Default learning rates for the first-order optimizers, chosen on 20 separate
+# tuning instances (n = 8, seed 777, p = 4 and 8, 5 restarts, random and INTERP
+# starts): gd tried 0.03, 0.1, 0.3, 1, 3, 10 -> 1; adam tried 0.01, 0.03, 0.1,
+# 0.3 -> 0.3 (results in experiments/results/qaoa_pilot/).
+DEFAULT_LR = {"gd": 1.0, "adam": 0.3}
+
+
+def interp_init(params, p):
+    """INTERP initialisation (Zhou et al., PRX 10, 021067 (2020)).
+
+    Given optimised depth-p angles params = [betas (p), gammas (p)], return
+    depth-(p+1) starting angles by linear interpolation:
+    x'_k = (k/p) x_{k-1} + ((p-k)/p) x_k, k = 0..p, with x_{-1} = x_p = 0.
+    """
+    params = np.asarray(params, dtype=float)
+    out = []
+    for x in (params[:p], params[p:]):
+        xp = np.concatenate([[0.0], x, [0.0]])  # x_{-1}, x_0..x_{p-1}, x_p
+        k = np.arange(p + 1)
+        out.append(k / p * xp[k] + (p - k) / p * xp[k + 1])
+    return np.concatenate(out)
+
+
 class QAOA:
+    """Statevector QAOA for a QUBO (bit 0 = most significant, as in vqpm).
+
+    params = [beta_1..beta_p, gamma_1..gamma_p]; layer l applies
+    exp(-i gamma_l H_P) then exp(-i beta_l sum_q X_q).
+    """
+
     def __init__(self, Q):
         self.n = Q.shape[0]  # Number of qubits
         self.N = 2**self.n  # Hilbert space dimension
         self.Hp = self.create_problem_hamiltonian(Q)
+        self.nfev = 0  # energy-only evaluations
+        self.ngrad = 0  # energy + adjoint-gradient evaluations
+        self.last_run = None
 
     def create_problem_hamiltonian(self, Q):
-        """Create a 1D diagonal array representing the Hamiltonian (No dense matrices)."""
-        H = np.zeros(self.N)
-        for k in range(self.N):
-            b = bin(k)[2:].zfill(self.n)
-            energy = 0.0
-            for i in range(self.n):
-                for j in range(i, self.n):
-                    if b[i] == "1" and b[j] == "1":
-                        energy += Q[i, j]
-            H[k] = energy
-        return H  # REMOVED np.diag() -> Keeps it as a fast 1D vector
+        """Diagonal of H_P = QUBO values of all basis states (vectorised,
+        bit-for-bit equal to the former loop)."""
+        return qubo_energies(self.n, Q)
 
     def ansatz_layer(self, state, beta, gamma):
         # Fully vectorized element-wise multiplication for Phase separation
@@ -190,21 +217,196 @@ class QAOA:
 
         return state
 
-    def run(self, p=1, maxiter=50):
-        """Optimize QAOA parameters and return final state data."""
+    def _x_sum(self, state):
+        """(sum_q X_q) |state>."""
+        out = np.zeros_like(state)
+        for qubit in range(self.n):
+            stride = 2**qubit
+            out += state.reshape(-1, 2, stride)[:, ::-1, :].ravel()
+        return out
+
+    def _initial_state(self):
+        return np.ones(self.N, dtype=complex) / np.sqrt(self.N)
+
+    def run(
+        self,
+        p=1,
+        maxiter=50,
+        n_restarts=1,
+        optimizer="L-BFGS-B",
+        gradient=None,
+        init="random",
+        rng=None,
+        lr=None,
+    ):
+        """Optimize QAOA parameters and return final state data.
+
+        Defaults reproduce the published code: one L-BFGS-B run with
+        finite-difference gradients from np.random.rand(2p) * pi.
+
+        Args:
+            n_restarts: independent starts; the one with the lowest final
+                energy is kept.
+            optimizer: 'L-BFGS-B', 'COBYLA', 'gd' (fixed-step gradient
+                descent; on a statevector SGD reduces to this) or 'adam'.
+                maxiter is the same cap for all (iterations for L-BFGS-B /
+                gd / adam, function evaluations for COBYLA).
+            gradient: 'fd' (scipy finite differences, published) or
+                'adjoint' (exact gradient by reverse-mode statevector
+                differentiation, about 3 evaluations of cost). Default:
+                'fd' for L-BFGS-B, 'adjoint' for gd/adam; ignored by COBYLA.
+            init: 'random' (uniform in [0, pi)) or 'interp' (INTERP: optimise
+                depth 1, 2, ..., p, each initialised from the previous depth
+                by interp_init; random depth-1 start per restart).
+            rng: None uses the global np.random (published behaviour), else a
+                seed or np.random.Generator.
+        After the call, self.last_run holds energy, params, nfev, ngrad,
+        nit, the per-restart results and an evaluation count in
+        finite-difference units (evals_fd_equiv = nfev + ngrad * (2p + 1)).
+        """
         self.p = p
-        initial_params = np.random.rand(2 * p) * np.pi
-        res = minimize(
-            self._expectation,
-            initial_params,
-            method="L-BFGS-B",  # "COBYLA", #"L-BFGS-B",#LBFGS gives better for shorter iterations
-            options={"maxiter": maxiter},
-        )
-        self.optimal_params = res.x
+        if rng is not None and not isinstance(rng, np.random.Generator):
+            rng = np.random.default_rng(rng)
+        if init == "interp":
+            chain = self.run_interp(
+                p, maxiter=maxiter, n_restarts=n_restarts, optimizer=optimizer,
+                gradient=gradient, rng=rng, lr=lr,
+            )
+            best = chain[p]
+            self.optimal_params = best["params"]
+            self.last_run = best
+            return self._final_state()
+        runs = []
+        for _ in range(n_restarts):
+            x0 = self._random_params(p, rng)
+            runs.append(self.optimize(x0, p, maxiter, optimizer, gradient, lr))
+        best = min(runs, key=lambda r: r["energy"])
+        self.optimal_params = best["params"]
+        self.last_run = self._summarise(runs, best, p)
         return self._final_state()
+
+    @staticmethod
+    def _random_params(p, rng):
+        if rng is None:
+            return np.random.rand(2 * p) * np.pi  # published behaviour
+        return rng.random(2 * p) * np.pi
+
+    @staticmethod
+    def _summarise(runs, best, p):
+        out = dict(best)
+        out["p"] = p
+        out["n_restarts"] = len(runs)
+        for k in ("nfev", "ngrad", "nit"):
+            out[k + "_total"] = int(sum(r[k] for r in runs))
+        out["evals_fd_equiv_total"] = int(sum(r["evals_fd_equiv"] for r in runs))
+        out["restart_energies"] = [r["energy"] for r in runs]
+        return out
+
+    def run_interp(self, p_max, maxiter=500, n_restarts=1, optimizer="L-BFGS-B",
+                   gradient=None, rng=None, lr=None):
+        """INTERP chain for depths 1..p_max. Returns {p: result} with the best
+        restart at each depth; *_total counts are cumulative over the chain
+        (depths 1..p) and all restarts, i.e. the cost of reaching depth p."""
+        if rng is not None and not isinstance(rng, np.random.Generator):
+            rng = np.random.default_rng(rng)
+        chains = []
+        for _ in range(n_restarts):
+            x = self._random_params(1, rng)
+            chain = {}
+            for p in range(1, p_max + 1):
+                if p > 1:
+                    x = interp_init(chain[p - 1]["params"], p - 1)
+                chain[p] = self.optimize(x, p, maxiter, optimizer, gradient, lr)
+            chains.append(chain)
+        out = {}
+        for p in range(1, p_max + 1):
+            runs = [c[p] for c in chains]
+            best = min(runs, key=lambda r: r["energy"])
+            res = dict(best)
+            res["p"] = p
+            res["n_restarts"] = n_restarts
+            for k in ("nfev", "ngrad", "nit", "evals_fd_equiv"):
+                res[k + "_total"] = int(sum(c[q][k] for c in chains for q in range(1, p + 1)))
+            res["restart_energies"] = [r["energy"] for r in runs]
+            out[p] = res
+        return out
+
+    # ----------------------------------------------------------- optimisers
+    def optimize(self, x0, p, maxiter=500, optimizer="L-BFGS-B", gradient=None, lr=None):
+        """One local optimisation from x0; returns a dict with params,
+        energy, nfev (energy-only evaluations), ngrad (adjoint gradient
+        evaluations, each also returns the energy), nit, evals_fd_equiv."""
+        self.p = p
+        if optimizer not in QAOA_OPTIMIZERS:
+            raise ValueError(f"unknown optimizer {optimizer!r}; choose from {QAOA_OPTIMIZERS}")
+        if gradient is None:
+            gradient = "fd" if optimizer == "L-BFGS-B" else "adjoint"
+        nfev0, ngrad0 = self.nfev, self.ngrad
+        x0 = np.asarray(x0, dtype=float)
+        if optimizer == "L-BFGS-B":
+            if gradient == "fd":
+                res = minimize(self._expectation, x0, method="L-BFGS-B",
+                               options={"maxiter": maxiter})
+            else:
+                res = minimize(self._expectation_and_grad, x0, jac=True,
+                               method="L-BFGS-B", options={"maxiter": maxiter})
+            x, nit = res.x, res.nit
+        elif optimizer == "COBYLA":
+            res = minimize(self._expectation, x0, method="COBYLA",
+                           options={"maxiter": maxiter})
+            x, nit = res.x, int(getattr(res, "nit", 0) or res.nfev)
+        else:
+            x, nit = self._first_order(x0, maxiter, optimizer, gradient, lr)
+        energy = float(self._expectation(x))
+        self.nfev -= 1  # bookkeeping evaluation, not part of the optimiser's cost
+        nfev, ngrad = self.nfev - nfev0, self.ngrad - ngrad0
+        return {
+            "params": np.asarray(x, dtype=float),
+            "energy": energy,
+            "nfev": int(nfev),
+            "ngrad": int(ngrad),
+            "nit": int(nit),
+            "evals_fd_equiv": int(nfev + ngrad * (2 * p + 1)),
+            "optimizer": optimizer,
+            "gradient": gradient if optimizer != "COBYLA" else None,
+        }
+
+    def _first_order(self, x0, maxiter, optimizer, gradient, lr, gtol=1e-6):
+        lr = DEFAULT_LR[optimizer] if lr is None else lr
+        x = x0.copy()
+        m = np.zeros_like(x)
+        v = np.zeros_like(x)
+        b1, b2, eps = 0.9, 0.999, 1e-8
+        it = 0
+        for it in range(1, maxiter + 1):
+            if gradient == "adjoint":
+                _, g = self._expectation_and_grad(x)
+            else:
+                g = self._fd_grad(x)
+            if np.linalg.norm(g) < gtol:
+                break
+            if optimizer == "gd":
+                x = x - lr * g
+            else:  # adam
+                m = b1 * m + (1 - b1) * g
+                v = b2 * v + (1 - b2) * g * g
+                mh = m / (1 - b1**it)
+                vh = v / (1 - b2**it)
+                x = x - lr * mh / (np.sqrt(vh) + eps)
+        return x, it
+
+    def _fd_grad(self, x, h=1e-7):
+        f0 = self._expectation(x)
+        g = np.empty_like(x)
+        for k in range(len(x)):
+            xk = x.copy()
+            xk[k] += h
+            g[k] = (self._expectation(xk) - f0) / h
+        return g
 
     def _expectation(self, params):
         """Return the expectation value using element-wise vector operations O(2^n)."""
+        self.nfev += 1
         state = np.ones(self.N, dtype=complex) / np.sqrt(self.N)
         betas = params[: self.p]
         gammas = params[self.p :]
@@ -212,6 +414,34 @@ class QAOA:
             state = self.ansatz_layer(state, beta, gamma)
         # Element-wise array multiplication (*) instead of dense matrix multiplication (@)
         return np.real(np.vdot(state, self.Hp * state))
+
+    def _expectation_and_grad(self, params):
+        """Energy and its exact gradient (adjoint / reverse-mode method).
+
+        For a gate exp(-i t A) inside |psi> = V exp(-i t A) |phi_before>,
+        dE/dt = 2 Im <lam| A |phi>, with |phi> the state right after the gate
+        and <lam| = <psi| H V. Cost: about 3 forward passes.
+        """
+        self.ngrad += 1
+        p = self.p
+        betas, gammas = params[:p], params[p:]
+        state = self._initial_state()
+        for beta, gamma in zip(betas, gammas):
+            state = self.ansatz_layer(state, beta, gamma)
+        lam = self.Hp * state
+        energy = float(np.real(np.vdot(state, lam)))
+        phi = state
+        g_beta = np.zeros(p)
+        g_gamma = np.zeros(p)
+        for l in range(p - 1, -1, -1):
+            g_beta[l] = 2 * np.imag(np.vdot(lam, self._x_sum(phi)))
+            phi = self.apply_mixer(phi, -betas[l])
+            lam = self.apply_mixer(lam, -betas[l])
+            g_gamma[l] = 2 * np.imag(np.vdot(lam, self.Hp * phi))
+            ph = np.exp(1j * gammas[l] * self.Hp)
+            phi = phi * ph
+            lam = lam * ph
+        return energy, np.concatenate([g_beta, g_gamma])
 
     def _final_state(self):
         """Generate the final state from the optimized parameters."""
@@ -223,6 +453,13 @@ class QAOA:
         self.probs = np.abs(state) ** 2
         self.optimal_state = int(np.argmax(self.probs))
         return self.optimal_state, self.probs
+
+    def final_probs(self, params, p):
+        """Output distribution for given angles (does not change state)."""
+        state = self._initial_state()
+        for beta, gamma in zip(params[:p], params[p:]):
+            state = self.ansatz_layer(state, beta, gamma)
+        return np.abs(state) ** 2
 
 
 def state_to_bin(state, n):
@@ -240,12 +477,22 @@ def multiple_random_qubos(n, num_of_qubos):
 
 
 # --- Main comparison functions ---
-def compare_algorithms(trials=100, n=10, p=4, trialQs=None):
+def compare_algorithms(trials=100, n=10, p=4, trialQs=None, legacy_instances=False):
     """
     Run 100 trials of the VQPM vs QAOA comparison for n qubits.
     For each trial the following are computed:
       - Hamming distance (number of different bits) between the target state and the found state.
       - The final probability (or max probability) achieved for the found state.
+
+    Args:
+        trialQs: optional dict/list of QUBO matrices, one per trial. If None,
+            a fresh random_qubo(n) is drawn for every trial.
+        legacy_instances: if True, ignore trialQs and draw a fresh
+            random_qubo(n) for every trial (interleaved with QAOA's own
+            np.random draws). This reproduces the published Fig. 9: the
+            original code had the test inverted
+            (``if trialQs is not None: Q = random_qubo(n)``), so the
+            pre-generated trialQs only advanced the RNG and were never used.
 
     Returns a dictionary containing the results for VQPM and QAOA.
     """
@@ -255,8 +502,8 @@ def compare_algorithms(trials=100, n=10, p=4, trialQs=None):
     final_prob_qaoa = []
     final_prob_qaoa_max = []
     for trial in range(trials):
-        if trialQs is not None:
-            # Generate a random QUB O instance (function defined elsewhere)
+        if legacy_instances or trialQs is None:
+            # Fresh random QUBO instance (legacy_instances=True reproduces Fig. 9)
             Q = random_qubo(n)
         else:
             Q = trialQs[trial]
@@ -578,8 +825,11 @@ def main1():
     trialQs = multiple_random_qubos(n, trials)
     # Generate random QUBO matrices
 
-    # Run the comparisons
-    results = compare_algorithms(trials=trials, n=n, p=p, trialQs=trialQs)
+    # Run the comparisons. legacy_instances=True keeps the published Fig. 9
+    # instances: trialQs above only advance the RNG (see compare_algorithms).
+    results = compare_algorithms(
+        trials=trials, n=n, p=p, trialQs=trialQs, legacy_instances=True
+    )
 
     # -------------------------------------------------------------------------
     # Matplotlib configuration for consistent styling.

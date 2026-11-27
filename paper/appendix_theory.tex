@@ -1,0 +1,308 @@
+% ============================================================================
+% Appendix: theoretical analysis
+% ============================================================================
+% Theorem environments are defined in the preamble of main.tex.
+
+\section{Theoretical analysis}
+\setcounter{equation}{0}
+\renewcommand{\theequation}{\thesection\arabic{equation}}
+\label{app:theory}
+
+This appendix gives the proofs for Secs.~\ref{sec:qpi} and~\ref{sec:VQPM} and keeps two procedures apart: \emph{coherent} quantum power iteration (QPI), which applies $(I+\mathcal{U})^k$ to one state (Eq.~\ref{eq:qpi}), and VQPM, which measures the single-qubit marginals after every round and prepares a new \emph{product} state from them. It also gives a moment-matrix (degree-2 sum-of-squares) view of VQPM. Classical simulability, shot counts and runs at larger $n$ are in Appendix~\ref{app:sampling}.
+
+All numbers below are computed with the same code as the main text. The instances are random QUBOs $Q=G+G^T$ with $G_{ij}\sim\mathcal N(0,1)$, drawn with seed $2026+n$, 100 instances per $n$ unless stated. Probabilities are exact (statevector level).
+
+\subsection{Setting}
+\label{app:setting}
+A computational-basis string $x\in\{0,1\}^n$ labels an eigenstate $\ket{j}$ of $\mathcal{U}$ in the main text. We evaluate
+\begin{equation}
+E(x)=\sum_{i\le j}Q_{ij}\,x_ix_j ,
+\label{eq:app-energy}
+\end{equation}
+that is, we use the upper triangle of $Q$ including the diagonal, and assign to $x$ an eigenphase $\lambda(x)$. For an input state whose computational-basis distribution is $p(x)$, one run of the circuit of Fig.~\ref{fig:Circuit Summary of VQPM} gives the control outcome $0$ together with the register outcome $x$ with probability
+\begin{equation}
+\Pr(c=0,\,x)=p(x)\,w(x),\qquad w(x)=\frac{|1+e^{i\lambda(x)}|^2}{4}=\cos^2\!\frac{\lambda(x)}{2}.
+\label{eq:app-filter}
+\end{equation}
+The control is therefore measured in $\ket{0}$ with probability $W(p)=\sum_x p(x)w(x)$, and the post-selected register has distribution $q(x)=p(x)w(x)/W(p)$. Relative phases of the input amplitudes play no role, because $\mathcal{U}$ is diagonal and every qubit is measured in the computational basis.
+
+\subsection{The phase map}
+\label{app:phasemap}
+\begin{lemma}[Phase window]
+\label{lem:window}
+Let $S=\sum_{i\le j}|Q_{ij}|$. The map of Eq.~\eqref{eq:phasemap},
+\begin{equation}
+\lambda(x)=\frac{\pi}{4}+\frac{\pi}{4}\,\frac{E(x)}{S},
+\label{eq:app-map}
+\end{equation}
+places all $2^n$ eigenphases in $[0,\pi/2]$, preserves the order of the energies, and costs $O(n^2)$ operations with no spectral information.
+\end{lemma}
+\begin{proof}
+For $x\in\{0,1\}^n$, $|E(x)|\le\sum_{i\le j}|Q_{ij}|x_ix_j\le S$. The map is affine with positive slope.
+\end{proof}
+
+\begin{remark}[Choice of the window]
+\label{rem:window}
+\leavevmode
+\begin{itemize}
+\item[(i)] Any window $[a,b]\subset[0,\pi)$ works: $w$ is strictly decreasing on $[0,\pi)$, so the minimum-energy string always receives the largest weight. The choice $b=\pi/2$ guarantees $W(p)\ge\cos^2(\pi/4)=1/2$ for every input, so post-selection costs at most a factor of two in shots.
+\item[(ii)] With $L=\sum_{i\le j}\min(Q_{ij},0)$ and $U=\sum_{i\le j}\max(Q_{ij},0)$ one has $L\le E(x)\le U$ and $U-L=S$, so the map $\lambda=a+(b-a)(E-L)/S$ uses twice the resolution of Eq.~\eqref{eq:app-map}. For a spin formulation $\sum_ih_iz_i+\sum_{i<j}J_{ij}z_iz_j$ with $z_i=\pm1$, the analogous bound is $\sum_i|h_i|+\sum_{i<j}|J_{ij}|$.
+\item[(iii)] \emph{Effect on convergence.} For phases $\lambda_d<\lambda_s$ the per-round weight ratio is $R^2=w(\lambda_s)/w(\lambda_d)$, with $R$ as in Eq.~\eqref{eq:ratio}. For a small gap $\gamma=\lambda_s-\lambda_d$,
+\begin{equation}
+1-R^2=\gamma\tan\frac{\lambda_d}{2}+O(\gamma^2).
+\label{eq:app-contrast}
+\end{equation}
+An affine map with slope $c$ gives $\gamma=c\,\Delta E$. Stretching the window raises the per-round contrast linearly in $c$, and moving it toward $\pi$ raises it through $\tan(\lambda_d/2)$, but moving it toward $\pi$ also lowers the acceptance bound $\cos^2(b/2)$.
+\end{itemize}
+\end{remark}
+
+Table~\ref{tab:app-phase} shows what the map does on the random instances of this paper. Because $S$ bounds the worst case over all strings, the energies occupy only 17\% to 29\% of $[0,\pi/2]$, and the gap between the two lowest phases falls from $4.2\times10^{-2}$~rad at $n=4$ to $2.1\times10^{-3}$~rad at $n=16$. Table~\ref{tab:app-windows} compares windows at $n=10$: the first-order formula~\eqref{eq:app-contrast} matches the exact $1-R^2$ to within 2\%, and the windows with larger contrast pay for it in acceptance.
+Sec.~\ref{sec:qpi} compares four maps in VQPM runs with locking.
+
+\begin{table}[ht]
+\centering
+\caption{Paper phase map, Eq.~\eqref{eq:app-map}, on random instances (medians over 100 instances per $n$). $\rho^*$ is the local VQPM rate at the optimum (Proposition~\ref{prop:stability}). The two iteration counts are for coherent iteration with $\epsilon=1/2$: the simpler bound $\ln(1/\epsilon)/\ln(1/R^2)$, which omits $A$, and Eq.~\eqref{eq:kbound}. The last column is the probability that all $k$ post-selections of coherent iteration succeed, Eq.~\eqref{eq:app-survival}, at the corrected $k$.}
+\label{tab:app-phase}
+\begin{tabular}{rcccccrr}
+\toprule
+$n$ & used window (rad) & gap $\lambda_s-\lambda_d$ (rad) & $1-R^2$ & $1-\rho^*$ & $k$ without $A$ & $k$, Eq.~\eqref{eq:kbound} & $\log_{10}Z_k$ \\
+\midrule
+4  & $[0.58,\,1.05]$ & $4.2\times10^{-2}$ & $1.2\times10^{-2}$ & $1.4\times10^{-2}$ & 56   & 219    & $-8.7$ \\
+8  & $[0.62,\,0.98]$ & $8.8\times10^{-3}$ & $2.9\times10^{-3}$ & $3.8\times10^{-3}$ & 237  & 1\,896 & $-82$ \\
+12 & $[0.62,\,0.94]$ & $3.5\times10^{-3}$ & $1.1\times10^{-3}$ & $1.4\times10^{-3}$ & 614  & 7\,373 & $-325$ \\
+16 & $[0.65,\,0.92]$ & $2.1\times10^{-3}$ & $6.8\times10^{-4}$ & $9.3\times10^{-4}$ & 1\,015 & 16\,247 & $-781$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Per-round contrast and acceptance for four phase windows at $n=10$ (medians over 100 instances). Acceptance is $W$ for the uniform input.}
+\label{tab:app-windows}
+\begin{tabular}{lccc}
+\toprule
+Map & $1-R^2$ & $\gamma\tan(\lambda_d/2)$, Eq.~\eqref{eq:app-contrast} & Acceptance $\Pr(c=0)$ \\
+\midrule
+Paper: $[-S,S]\to[0,\pi/2]$        & $2.4\times10^{-3}$ & $2.4\times10^{-3}$ & 0.85 \\
+Tight: $[L,U]\to[0,\pi/2]$         & $3.2\times10^{-3}$ & $3.2\times10^{-3}$ & 0.85 \\
+Tight: $[L,U]\to[0,0.9\pi]$        & $1.1\times10^{-2}$ & $1.1\times10^{-2}$ & 0.58 \\
+Paper, shifted: $\to[\pi/2,\pi]$   & $1.5\times10^{-2}$ & $1.5\times10^{-2}$ & 0.15 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Coherent iteration and its iteration bound}
+\label{app:coherent}
+After $k$ coherent rounds in which every control outcome is $0$ (Eq.~\ref{eq:qpi}), the register distribution is
+\begin{equation}
+q^{\mathrm{coh}}_k(x)=\frac{p_0(x)\,w(x)^k}{Z_k},\qquad Z_k=\sum_x p_0(x)\,w(x)^k ,
+\label{eq:app-coherent}
+\end{equation}
+and $Z_k$ is the probability that all $k$ post-selections succeed. Eqs.~\eqref{eq:marginal0}--\eqref{eq:marginal1} are the single-qubit marginals of Eq.~\eqref{eq:app-coherent} for the uniform $p_0$.
+
+\begin{proposition}[Iteration bound]
+\label{prop:kbound}
+Let $X^*$ be the set of optimal strings, $A=\sum_{x\in X^*}p_0(x)>0$ the initial probability on it, $w^*$ the weight of an optimal string and $R^2=\max_{x\notin X^*}w(x)/w^*$. Then
+\begin{equation}
+P_k:=q^{\mathrm{coh}}_k(X^*)\;\ge\;\frac{1}{1+\frac{1-A}{A}R^{2k}},
+\end{equation}
+so $P_k\ge1-\epsilon$ is guaranteed when
+\begin{equation}
+k\;\ge\;\frac{\ln\frac{1-A}{A}+\ln\frac{1-\epsilon}{\epsilon}}{\ln(1/R^2)} .
+\label{eq:app-kbound}
+\end{equation}
+For the uniform start $A=|X^*|/2^n$, so $k$ grows as $n\ln2/\ln(1/R^2)$.
+\end{proposition}
+\begin{proof}
+$P_k=Aw^{*k}/(Aw^{*k}+\sum_{x\notin X^*}p_0(x)w(x)^k)$ and $\sum_{x\notin X^*}p_0(x)w(x)^k\le(1-A)R^{2k}w^{*k}$. Rearranging $(1-A)R^{2k}/A\le\epsilon/(1-\epsilon)$ gives Eq.~\eqref{eq:app-kbound}.
+\end{proof}
+
+Eq.~\eqref{eq:app-kbound} is Eq.~\eqref{eq:kbound} of the main text. The simpler bound $k\ge\ln(1/\epsilon)/\ln(1/R^2)$ omits the initial mass $A$; $\epsilon$ is the tolerated failure probability. The bound is tight when all suboptimal strings have the same weight, as in the two-qubit example $\lambda(x)=\frac{\pi}{2}(x_1+x_2-x_1x_2)$: there $A=1/4$, $R^2=1/2$ and $P_k=1/(1+3\cdot2^{-k})=0.40,\,0.57,\,0.73,\,0.84,\,0.91$ for $k=1,\dots,5$. For $\epsilon=1/4$, the bound without $A$ gives $k=2$, while Eq.~\eqref{eq:app-kbound} gives $k\ge3.17$, that is $k=4$, the first $k$ with $P_k\ge3/4$.
+
+\paragraph{Cost of coherent iteration.} A run of coherent iteration is kept only if all $k$ control outcomes are $0$, which happens with probability
+\begin{equation}
+Z_k=\sum_xp_0(x)w(x)^k\;\ge\;A\,w^{*k}.
+\label{eq:app-survival}
+\end{equation}
+This probability is tied to the eigenvalues of $I+\mathcal{U}$. Round $t$ succeeds with probability $Z_t/Z_{t-1}=\sum_xq^{\mathrm{coh}}_{t-1}(x)\,w(x)$, which tends to $w^*=\cos^2(\lambda_d/2)=|1+e^{i\lambda_d}|^2/4$, the squared magnitude of the dominant eigenvalue of $(I+\mathcal{U})/2$, as the state converges to the optimum; this is the eigenvalue information carried by the control qubit (Sec.~\ref{sec:controlqubit}). Once the state has converged, $Z_k$ therefore decays like $w^{*k}$. The map of Lemma~\ref{lem:window} puts $\lambda_d$ near $0.6$~rad on our instances (Table~\ref{tab:app-phase}), so $w^*\approx0.9$. Moving $\lambda_d$ toward $0$ would make post-selection nearly free, but by Eq.~\eqref{eq:app-contrast} the per-round contrast $1-R^2\approx\gamma\tan(\lambda_d/2)$ would vanish with it.
+
+\paragraph{Restarting versus reloading.} With mid-circuit measurement, each round is a repeat-until-success step whose success probability $p_t=Z_t/Z_{t-1}$ is set by the eigenvalues as above. What makes the total cost exponential is that a failed round destroys the state: the control outcome $1$ leaves $(I-\mathcal{U})\ket{\psi_{t-1}}$, which carries the opposite filter $\sin^2(\lambda(x)/2)$, so the run has to restart from $\ket{\psi_0}$. The $k$ successes are then needed in a row, the probability of that is the product $p_1\cdots p_k=Z_k$, and the expected number of rounds to finish is $\sum_{s=1}^{k}Z_{s-1}/Z_k$, between $1/Z_k$ and $k/Z_k$. If instead the post-selected state $\ket{\psi_{t-1}}$ could be reloaded after every failure, each round could be retried on its own, and the expected cost would drop to $\sum_{t=1}^{k}1/p_t$ rounds. This is at most $2k$ under the map of Lemma~\ref{lem:window}, where every $w(x)\ge1/2$, and about $k/w^*\approx1.1k$ once the state has converged. Reloading, however, needs a fresh copy of $\ket{\psi_{t-1}}$ for every attempt. A quantum memory holding one copy does not supply this: the failed attempt consumes that copy, and an unknown state cannot be copied \cite{wootters1982single}. A new copy must be prepared either by re-running the $t-1$ successful rounds, which is the restart cost above, or from a classical description of the state, for example loaded through a quantum RAM \cite{giovannetti2008quantum}. For coherent iteration that description is the amplitude vector $\psi_{t-1}(x)\propto\psi_0(x)(1+e^{i\lambda(x)})^{t-1}$, which needs $\lambda(x)$ for all $2^n$ strings, so building it is as costly as exhaustive search. VQPM is the cheapest version of reloading: it keeps only the $n$ measured marginals and reloads the product state with those marginals, so its rounds are independent and each succeeds with probability at least $1/2$. The price is that the correlations of $\ket{\psi_{t-1}}$ are not reloaded (Appendix~\ref{app:vqpm-map}).
+
+\paragraph{Between QPI and VQPM.} Two kinds of variants lie between the two ends. Storing richer classical data, such as the two-point correlations of Appendix~\ref{app:sos}, would reload part of the correlations, but requires correlated input states. One can also measure and re-prepare after every block of $m$ coherent rounds: $m=1$ is VQPM and $m=k$ is QPI. For an input distribution $p$ a block succeeds with probability $\sum_xp(x)w(x)^m$, and under the map of Lemma~\ref{lem:window} every $w(x)\ge1/2$, so a block needs at most $2^m$ attempts on average. Inside a block the filter $w^m$ acts with all correlations kept; between blocks only the marginals survive. Larger $m$ therefore keeps more of the coherent filter and needs fewer re-preparations, at a cost in repetitions that grows exponentially with $m$; $m=1$ keeps the repetitions lowest. For QUBO, every member of this family remains classically samplable (Proposition~\ref{prop:classical}).
+
+On the paper's instances (Table~\ref{tab:app-phase}), Eq.~\eqref{eq:app-kbound} asks for 219 rounds at $n=4$ and about $1.6\times10^4$ at $n=16$, four to sixteen times the counts of the bound without $A$, and at those $k$ the survival probability $Z_k$ is $10^{-9}$ at $n=4$ and below $10^{-80}$ from $n=8$ on. Coherent iteration with these $k$ is therefore not practical, and the iteration counts of Sec.~\ref{sec:qpi} do not describe the VQPM runs with locking of Secs.~\ref{sec:VQPM} and~\ref{sec:comparison}, which stop within 30 to 100 iterations. The VQPM update without locking is not faster either: from the uniform start it needs a median of $2.7\times10^3$ to $1.2\times10^4$ rounds to settle for $n=6$ to $12$ (Table~\ref{tab:app-exact}). In the runs of the main text, the locking mechanism, not the power filter, does most of the work (Appendix~\ref{app:locking}).
+
+\subsection{The VQPM update}
+\label{app:vqpm-map}
+VQPM does not apply Eq.~\eqref{eq:app-coherent}. After each round it estimates the single-qubit marginals of $q$ and prepares the product state with those marginals. Write $\pi_i=\Pr(x_i=1)$ and $p_\pi(x)=\prod_i\pi_i^{x_i}(1-\pi_i)^{1-x_i}$. With exact marginals and without rounding or locking, one VQPM round is the map
+\begin{equation}
+\pi_i'=\frac{1}{W(\pi)}\sum_{x:\,x_i=1}p_\pi(x)\,w(x),\qquad W(\pi)=\sum_xp_\pi(x)\,w(x).
+\label{eq:app-vqpm}
+\end{equation}
+Locking replaces $\pi_i'$ by $0$ or $1$ for all later rounds, and rounding replaces it by its value rounded to the measurement precision.
+
+From the uniform start, the first round of Eq.~\eqref{eq:app-vqpm} agrees with Eqs.~\eqref{eq:marginal0}--\eqref{eq:marginal1} at $k=1$. From the second round on they differ, because the product state $p_{\pi'}$ is not the filtered distribution $q$. In the two-qubit example of Appendix~\ref{app:coherent} the first round gives $q_1=(2,1,1,1)/5$ in the order $00,01,10,11$, so each bit is $0$ with probability $3/5$ and VQPM prepares $(9,6,6,4)/25$. The second round then gives $(9,3,3,2)/17$ for VQPM and $(4,1,1,1)/7$ for coherent iteration, so $\Pr(x_1=0)$ is $12/17$ and $5/7$, respectively. Our implementation of the VQPM update reproduces these numbers exactly. Eqs.~\eqref{eq:marginal0}--\eqref{eq:marginal1} describe coherent iteration; VQPM follows Eq.~\eqref{eq:app-vqpm}.
+
+The product state with the marginals of $q$ is the product distribution closest to $q$ in relative entropy $D(q\,\|\,p_\pi)$, since $D(q\|p_\pi)=\mathrm{const}-\sum_i[q_i\ln\pi_i+(1-q_i)\ln(1-\pi_i)]$ is minimized at $\pi_i=q_i$. The re-preparation therefore keeps the marginals and discards every correlation of $q$; Appendix~\ref{app:sos} quantifies what is discarded. In the language of estimation-of-distribution algorithms, Eq.~\eqref{eq:app-vqpm} is the univariate marginal distribution algorithm with selection weights $w$~\cite{muhlenbein1996recombination}. This connection lets us use two classical results.
+
+\begin{proposition}[The acceptance never decreases]
+\label{prop:monotone}
+Under Eq.~\eqref{eq:app-vqpm}, $W(\pi')\ge W(\pi)$, with equality only at fixed points. Equivalently,
+\begin{equation}
+\pi_i'-\pi_i=\frac{\pi_i(1-\pi_i)}{W(\pi)}\,\frac{\partial W}{\partial\pi_i}.
+\label{eq:app-wright}
+\end{equation}
+\end{proposition}
+\begin{proof}
+Write $y_{i1}=\pi_i$, $y_{i0}=1-\pi_i$. Then $W=\sum_xw(x)\prod_iy_{i,x_i}$ is a polynomial with nonnegative coefficients, homogeneous of degree $n$ and of degree one in each pair $(y_{i0},y_{i1})$. Hence $y_{i1}\,\partial W/\partial y_{i1}=\sum_{x:x_i=1}p_\pi(x)w(x)$ and $\sum_b y_{ib}\,\partial W/\partial y_{ib}=W$, so Eq.~\eqref{eq:app-vqpm} reads $\pi_i'=y_{i1}\,\partial_{y_{i1}}W/\sum_by_{ib}\,\partial_{y_{ib}}W$. This is the growth transform of Baum and Eagon, which increases any such polynomial strictly unless it is at a fixed point~\cite{baum1967inequality,baum1968growth}. Eq.~\eqref{eq:app-wright} follows from $W=\pi_iW_{i1}+(1-\pi_i)W_{i0}$ with $W_{ib}=\mathbb{E}_{p_\pi}[w\mid x_i=b]$.
+\end{proof}
+
+$W$ is the probability of measuring the control qubit in $\ket{0}$. Proposition~\ref{prop:monotone} therefore makes the observation of Sec.~\ref{sec:controlqubit} precise: with exact marginals, VQPM is an ascent method for $W$, and the control probability can decrease only through rounding, locking or shot noise. Even with rounding and locking it almost never does: in the 3\,623 rounds of the paper-setting runs of Table~\ref{tab:app-locking} it fell once. This is why the policy ``lock only when the probability of $\ket{0}$ increases'' of Sec.~\ref{sec:controlqubit} changed nothing.
+
+\begin{proposition}[Fixed points and their stability]
+\label{prop:stability}
+Every vertex $\pi=x\in\{0,1\}^n$ is a fixed point of Eq.~\eqref{eq:app-vqpm}. Near $x$, a small deviation $\delta_i$ of coordinate $i$ toward the flipped value evolves as
+\begin{equation}
+\delta_i'=r_i\,\delta_i+O(\|\delta\|^2),\qquad r_i=\frac{w(x\oplus e_i)}{w(x)} .
+\end{equation}
+Hence $x$ is asymptotically stable if every single bit flip raises the energy ($x$ is a strict 1-flip local minimum), and unstable if some single flip lowers it.
+\end{proposition}
+\begin{proof}
+Near $x$, $p_\pi$ puts mass $\delta_i+O(\|\delta\|^2)$ on $x\oplus e_i$ and $O(\|\delta\|^2)$ on strings at Hamming distance two or more, and $W=w(x)+O(\|\delta\|)$. The new deviation is the post-selected mass on strings with bit $i$ flipped, $\delta_iw(x\oplus e_i)/w(x)+O(\|\delta\|^2)$. Since $w$ decreases with $\lambda$ and $\lambda$ increases with $E$, $r_i<1$ exactly when $E(x\oplus e_i)>E(x)$.
+\end{proof}
+
+Three consequences follow.
+\begin{itemize}
+\item[(a)] VQPM can converge to a suboptimal string even with exact marginals and no locking: every strict 1-flip local minimum of $E$ attracts the iteration. This accounts for the behaviour in Fig.~\ref{fig-losing-eigenstate} without any measurement error: the information loss of Sec.~\ref{sec:infoloss} is a property of the update itself. In Table~\ref{tab:app-exact}, 10\% to 14\% of exact runs end at a suboptimal local minimum.
+\item[(b)] Near the optimum $x^*$ the contraction rate is $\rho^*=\max_iw(x^*\oplus e_i)/w(x^*)\le R^2$. It is set by the single-flip neighbours of $x^*$, not by the global gap. On our instances $1-\rho^*$ is about 15\% to 35\% larger than $1-R^2$ (Table~\ref{tab:app-phase}).
+\item[(c)] The number of attracting vertices grows with $n$: on our instances the mean number of strict 1-flip local minima is 1.2 at $n=4$, 2.0 at $n=8$, 2.7 at $n=12$ and 4.3 at $n=16$, with up to 19 at $n=16$. For the Sherrington--Kirkpatrick spin glass this number grows as $e^{0.199n}$~\cite{tanaka1980analytic}.
+\end{itemize}
+
+Table~\ref{tab:app-exact} checks Propositions~\ref{prop:monotone} and~\ref{prop:stability} by iterating Eq.~\eqref{eq:app-vqpm} from the uniform start until every marginal is within $10^{-6}$ of $0$ or $1$ (at most $3\times10^5$ rounds). $W$ never decreased, and every run that reached a vertex ended at a strict 1-flip local minimum.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Exact VQPM map, Eq.~\eqref{eq:app-vqpm}, without rounding or locking, from the uniform start (100 instances per $n$). Across all rounds and runs the smallest change of $W$ was $+3\times10^{-15}$, so $W$ never decreased. A few runs (1 to 3 per $n$) were still moving slowly after $3\times10^5$ rounds; for them the limit is taken as the nearest vertex.}
+\label{tab:app-exact}
+\begin{tabularx}{\textwidth}{r>{\centering\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
+\toprule
+$n$ & Reached a vertex & Limit is a strict 1-flip local min. & Limit is the optimum & Rounds to settle (median) & Strict 1-flip local minima per instance (median, max) \\
+\midrule
+6  & 99\% & 100\% & 89\% & 2\,672  & 1, 4 \\
+8  & 98\% & 100\% & 90\% & 4\,265  & 2, 6 \\
+10 & 99\% & 100\% & 86\% & 5\,547  & 2, 7 \\
+12 & 97\% & 100\% & 88\% & 11\,739 & 2, 7 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Locking, rounding and wrong locks}
+\label{app:locking}
+A qubit is locked to $s\in\{0,1\}$ when the measured difference $D_i=P_1-P_0=2\pi_i'-1$ satisfies $|D_i|>p_{\mathrm{diff}}$, and $s$ is the more probable value. A lock is \emph{wrong} if $s\ne x^*_i$; it removes the optimum from the remaining search space permanently. There are two mechanisms.
+
+\paragraph{Structural wrong locks.} The exact marginal itself favours the wrong value. By Proposition~\ref{prop:stability} the update is pulled toward every 1-flip local minimum, and with $p_{\mathrm{diff}}=0.01$ a qubit locks as soon as its marginal moves $0.005$ away from $1/2$. The first lock comes in round 1 or 2 (Table~\ref{tab:app-locking}), long before the filter has separated the optimum from nearby strings. More shots do not remove these locks.
+
+\paragraph{Statistical wrong locks.} With $M$ post-selected shots in a round, $\hat D_i-D_i=2(\hat P_1-P_1)$. If $x^*_i=0$ and $D_i<p_{\mathrm{diff}}$, Hoeffding's inequality gives
+\begin{equation}
+\Pr\bigl(\text{lock to }1\bigr)=\Pr\bigl(\hat D_i>p_{\mathrm{diff}}\bigr)\le\exp\!\Bigl(-\tfrac{M}{2}\,(p_{\mathrm{diff}}-D_i)^2\Bigr),
+\label{eq:app-statlock}
+\end{equation}
+and symmetrically for $x^*_i=1$. For an undecided qubit ($D_i\approx0$) and $p_{\mathrm{diff}}=0.01$ the bound is $0.95$, $0.61$, $6.7\times10^{-3}$ and $2\times10^{-22}$ for $M=10^3,10^4,10^5,10^6$. A threshold of $0.01$ thus needs on the order of $10^5$ post-selected shots per round before statistical wrong locks become rare; Appendix~\ref{app:hoeffding} makes this precise for all qubits and rounds.
+
+\paragraph{Rounding.} The simulations round the exact marginals to $d$ decimals instead of sampling. The rounding error, at most $\frac12 10^{-d}$, equals the shot-noise standard error at $P=1/2$ when $M\approx10^{2d}$, that is $10^6$ shots for $d=3$. Rounding is deterministic and therefore creates fixed points: if every unlocked marginal moves by less than $\frac12 10^{-d}$ in a round (Eq.~\eqref{eq:app-wright}), the rounded input repeats and the iteration stalls for good. This is why raising the iteration budget beyond 30 does not change the results at precision 3.
+
+Table~\ref{tab:app-locking} reports these effects for the paper's settings. With exact marginals every wrong lock is structural. Wrong locks occur in 26\% to 36\% of runs and account for 57\% to 79\% of the failures; the other failures ran out of rounds. Stalls from rounding grow with $n$, from 8\% of runs at $n=8$ to 37\% at $n=16$.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Paper settings ($p_{\mathrm{diff}}=0.01$, precision 3, at most 30 rounds, stop rule of Appendix~\ref{alg:1} using the known optimum), exact marginals, 100 instances per $n$. ``Lowers $\bar E$'': the lock lowers the expected energy of the next input state (Lemma~\ref{lem:leakage}). ``Stalled'': the rounded input state repeated before all qubits were locked.}
+\label{tab:app-locking}
+\begin{tabularx}{\textwidth}{r*{8}{>{\centering\arraybackslash}X}}
+\toprule
+$n$ & Rounds used (mean) & First lock (round, median) & Locks that lower $\bar E$ & Runs with a wrong lock & Failures with a wrong lock & Runs stalled & Optimum found & Output is a 1-flip local min. \\
+\midrule
+8  & 7.8  & 1 & all 655 & 26\% & 26 of 33 & 8\%  & 67\% & 71\% \\
+12 & 13.9 & 2 & all 943 & 33\% & 33 of 55 & 29\% & 45\% & 52\% \\
+16 & 17.5 & 2 & all 1\,211 & 36\% & 36 of 63 & 37\% & 37\% & 45\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{The Hoeffding threshold}
+\label{app:hoeffding}
+\paragraph{What Eq.~\eqref{eq:hoeffdingdynamic} is.} Hoeffding's inequality gives the radius $\epsilon=\sqrt{\ln(2/\delta)/(2N)}$ for the mean of $N$ samples in $[0,1]$. Eq.~\eqref{eq:hoeffdingdynamic} sets $N=10nM$, which is the radius for a marginal estimated from $10nM=1000n$ shots. The simulations do not draw shots (they round exact marginals), so $M$ in Eq.~\eqref{eq:hoeffdingdynamic} is not the shot count of any experiment, and the factor $10n$ is an empirical choice that keeps $p_{\mathrm{diff}}$ in a workable range; it is not derived. Two further corrections apply. First, the split $\delta_k=\delta_{\mathrm{total}}/(T-k)$ over $T$ rounds sums to $\delta_{\mathrm{total}}H_T$, where $H_T$ is the harmonic number; for $T=30$ this is $4.0\,\delta_{\mathrm{total}}=2.0$ for $\delta_{\mathrm{total}}=0.5$, so the union bound is overspent; $\delta_k=\delta_{\mathrm{total}}/T$ is the correct split. Second, the implemented rule gives $p_{\mathrm{diff}}\in[0.0062,0.049]$ over $n=1,\dots,18$ with $T=30$, and $[0.0068,0.0126]$ at $n=15$.
+
+\begin{proposition}[A derived threshold]
+\label{prop:threshold}
+Suppose each round uses $M$ post-selected shots in which all $n$ qubits are measured, and the run has at most $T$ rounds. Let
+\begin{equation}
+\epsilon=\sqrt{\frac{\ln(2nT/\delta)}{2M}},
+\label{eq:app-threshold}
+\end{equation}
+and lock qubit $i$ only if $|\hat P_0-\hat P_1|\ge p_{\mathrm{diff}}=2\epsilon$. Then, with probability at least $1-\delta$, every lock in the run agrees with the sign of the exact marginal difference $D_i$ of its round.
+\end{proposition}
+\begin{proof}
+For each qubit and round, $\Pr(|\hat P_0-P_0|\ge\epsilon)\le2e^{-2M\epsilon^2}=\delta/(nT)$. A union bound over the $nT$ estimates gives probability at least $1-\delta$ that all of them are within $\epsilon$. On that event $|\hat D_i-D_i|\le2\epsilon$, so $|\hat D_i|\ge2\epsilon$ implies that $D_i$ has the same sign as $\hat D_i$ (or is zero).
+\end{proof}
+
+The rule depends on $n$ only through $\ln n$, from the union bound over qubits. Solving Eq.~\eqref{eq:app-threshold} for $M$ gives $M=2\ln(2nT/\delta)/p_{\mathrm{diff}}^2$: for $p_{\mathrm{diff}}=0.01$, $T=30$ and $\delta=0.05$ this is $1.8\times10^5$ post-selected shots per round at $n=8$ and $2.0\times10^5$ at $n=20$. Dividing by the acceptance $W\ge1/2$ (about $0.85$ in practice) gives the total. Proposition~\ref{prop:threshold} removes statistical wrong locks only; structural wrong locks (Appendix~\ref{app:locking}) do not depend on $M$.
+
+\subsection{Moment-matrix (degree-2 sum-of-squares) view}
+\label{app:sos}
+For a distribution $q$ on $\{0,1\}^n$ let $Y(q)=\mathbb{E}_q[(1,x)(1,x)^{T}]$, the $(n+1)\times(n+1)$ matrix with $Y_{00}=1$, $Y_{0i}=q(x_i=1)$ and $Y_{ij}=q(x_i=x_j=1)$, so that $Y_{ii}=Y_{0i}$. $Y(q)$ is a convex combination of the rank-one matrices $(1,x)(1,x)^T$ and lies in the boolean quadric (cut) polytope~\cite{deza1997geometry}; in particular it is feasible for the degree-2 sum-of-squares (Shor) relaxation~\cite{shor1987quadratic,lasserre2001global}
+\begin{equation}
+\mathrm{SDP}^*=\min_Y\ \sum_iQ_{ii}Y_{0i}+\sum_{i<j}Q_{ij}Y_{ij}\quad\text{s.t.}\quad Y\succeq0,\ Y_{00}=1,\ Y_{ii}=Y_{0i},
+\label{eq:app-shor}
+\end{equation}
+whose objective at $Y(q)$ is the expected energy $\mathbb{E}_q[E(x)]$. This view gives three statements about VQPM.
+
+\paragraph{What the re-preparation discards.} The product state keeps the first row $Y_{0i}$ of $Y(q)$ and replaces each $Y_{ij}$, $i\ne j$, by $Y_{0i}Y_{0j}$. The discarded covariance $C_{ij}=Y_{ij}-Y_{0i}Y_{0j}$ changes the expected energy of the next input by $-\sum_{i<j}Q_{ij}C_{ij}$. In the two-qubit example, $q_1=(2,1,1,1)/5$ has $Y_{01}=Y_{02}=2/5$ and $Y_{12}=1/5$, so the covariance $C_{12}=1/25$ is lost; this is exactly why the coherent and the VQPM second rounds differ.
+
+\paragraph{Locking.} For a product input with marginals $\pi$, fixing $x_i=s$ sets $Y_{0i}=s$ and $Y_{ij}=sY_{0j}$, the same affine constraint that fixing a variable imposes in Eq.~\eqref{eq:app-shor}. Its effect on the expected energy $\bar E(\pi)=\mathbb{E}_{p_\pi}[E(x)]=\sum_iQ_{ii}\pi_i+\sum_{i<j}Q_{ij}\pi_i\pi_j$ is exact and simple.
+
+\begin{lemma}[Energy change under locking]
+\label{lem:leakage}
+Setting $\pi_i$ to $s\in\{0,1\}$ changes the expected energy of the product state by
+\begin{equation}
+\Delta\bar E=(s-\pi_i)\,g_i,\qquad g_i=\frac{\partial\bar E}{\partial\pi_i}=Q_{ii}+\sum_{j\ne i}Q_{ij}\pi_j ,
+\end{equation}
+where $Q_{ij}$ with $i>j$ stands for $Q_{ji}$. If the lock passes the threshold, $\min(\pi_i,1-\pi_i)\le(1-p_{\mathrm{diff}})/2$, and
+\begin{equation}
+|\Delta\bar E|\le\frac{1-p_{\mathrm{diff}}}{2}\Bigl(|Q_{ii}|+\sum_{j\ne i}|Q_{ij}|\Bigr).
+\label{eq:app-leakage}
+\end{equation}
+\end{lemma}
+\begin{proof}
+$\bar E$ is affine in $\pi_i$ with slope $g_i$. Locking to the more probable value moves $\pi_i$ by $\min(\pi_i,1-\pi_i)$, and $|g_i|\le|Q_{ii}|+\sum_{j\ne i}|Q_{ij}|$ because $\pi_j\in[0,1]$.
+\end{proof}
+
+The right-hand side of Eq.~\eqref{eq:app-leakage} is proportional to the influence score of Eq.~\eqref{eq:influence}. This gives a reason for scaling $p_{\mathrm{diff}}$ by influence (Sec.~\ref{sec:influence}): the influence bounds how far a single lock can move the expected energy. In the runs of Table~\ref{tab:app-locking}, $\Delta\bar E<0$ for all 2\,809 locks: in the paper's settings locking always moved the input toward lower expected energy, so a wrong lock is a greedy step into the wrong basin rather than an increase in energy.
+
+\paragraph{An a posteriori optimality gap.} Because every $Y(q)$ is feasible for Eq.~\eqref{eq:app-shor},
+\begin{equation}
+\mathrm{SDP}^*\le\min_xE(x)\le E(x_{\mathrm{VQPM}})
+\end{equation}
+for any string $x_{\mathrm{VQPM}}$ returned by VQPM. The semidefinite program has size $n+1$ and is solvable in polynomial time, so $E(x_{\mathrm{VQPM}})-\mathrm{SDP}^*$ certifies the quality of a VQPM output for sizes at which the optimum cannot be enumerated. Table~\ref{tab:app-sdp} shows how tight this certificate is on our instances: the relaxation is exact for 7\% to 33\% of them, and the certified gap of a VQPM output is about twice its true error (median $0.027$ against $0.013$ of the energy range at $n=16$).
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Shor (degree-2 SoS) lower bound, Eq.~\eqref{eq:app-shor}, against the optimum $E^*$ and the energy $E_{\mathrm{VQPM}}$ of the VQPM output (paper settings), as fractions of the energy range $E_{\max}-E_{\min}$. Medians over 30 instances per $n$; the maximum is in brackets.}
+\label{tab:app-sdp}
+\begin{tabularx}{\textwidth}{r*{4}{>{\centering\arraybackslash}X}}
+\toprule
+$n$ & Relaxation gap $E^*-\mathrm{SDP}^*$ & Relaxation exact ($<10^{-4}$) & VQPM error $E_{\mathrm{VQPM}}-E^*$ & Certified gap $E_{\mathrm{VQPM}}-\mathrm{SDP}^*$ \\
+\midrule
+8  & 0.005 [0.066] & 33\% & 0.000 & 0.009 \\
+12 & 0.009 [0.037] & 13\% & 0.012 & 0.019 \\
+16 & 0.015 [0.043] & 7\%  & 0.013 & 0.027 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{remark}[Hyperplane rounding]
+For Max-Cut instances with nonnegative weights one could apply Goemans--Williamson hyperplane rounding~\cite{goemans1995improved} to $Y(q)$ and obtain an expected cut of at least $\alpha_{\mathrm{GW}}\approx0.878$ times $\mathbb{E}_q[\mathrm{cut}]$. Sampling $q$ directly already gives $\mathbb{E}_q[\mathrm{cut}]$, so this does not improve on measuring the state, and for QUBO instances with mixed signs, as here, no constant-factor guarantee of this kind holds. We therefore do not use rounding. Martinez, Fawzi and Stilck Fran\c{c}a apply Gaussian rounding of this kind to the two-qubit marginals of noisy quantum circuits for Max-Cut~\cite{martinez2026sampling}.
+\end{remark}
+

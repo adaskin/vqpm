@@ -1,0 +1,2 @@
+control-variate estimator, N = 20000 draws, max error vs exact at n = 20: 1.1e-04, 7.0e-05
+records written to theory_checks/large_n.json

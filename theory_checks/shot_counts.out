@@ -1,0 +1,20 @@
+Post-selected shots per round for the derived Hoeffding threshold: M = 2 ln(2nT/delta) / tau^2, T=30, delta=0.05, tau=0.01
+ n | QUBO terms n(n+1)/2 | M (post-sel.) | W round 1 med [min,max] | W all rounds med [min,max] | ratio med [max] | max |ratio - W| | quantum shots M/W (med W) | classical weighted draws ratio*M/W
+ 8 |   36 | 1.83e+05 | 0.849 [0.797, 0.902] | 0.897 [0.797, 0.972] | 0.897 [0.961] | 2.1e-03 | 2.05e+05 | 1.83e+05
+12 |   78 | 1.91e+05 | 0.855 [0.817, 0.881] | 0.901 [0.817, 0.946] | 0.901 [0.943] | 7.1e-04 | 2.13e+05 | 1.91e+05
+16 |  136 | 1.97e+05 | 0.855 [0.829, 0.879] | 0.892 [0.829, 0.934] | 0.892 [0.934] | 3.6e-04 | 2.21e+05 | 1.97e+05
+
+Draws needed for the same variance as the device's post-selected (ratio) estimate, worst unlocked qubit per round; median [min, max] over all rounds; and the resulting draws per round for the derived threshold
+ n | device + control variate | classical weighted | classical weighted + control variate | device CV draws | classical CV draws
+ 8 | 0.103 [0.039, 0.203] | 0.897 [0.799, 0.961] | 2.6e-05 [2.9e-15, 2.1e-03] | 2.11e+04 | 5.34e+00
+12 | 0.099 [0.057, 0.184] | 0.901 [0.817, 0.943] | 5.0e-06 [4.4e-23, 7.1e-04] | 2.11e+04 | 1.06e+00
+16 | 0.108 [0.066, 0.171] | 0.892 [0.829, 0.934] | 7.0e-06 [1.3e-15, 3.6e-04] | 2.39e+04 | 1.55e+00
+
+Classical sampler: wall-clock time per round on one core (numpy, float64), weighted estimator, uniform product input, N draws = M / 0.85
+ n | draws per round | seconds per round | microseconds per draw
+ 8 | 2.16e+05 | 0.018 | 0.084
+12 | 2.25e+05 | 0.025 | 0.113
+16 | 2.32e+05 | 0.031 | 0.133
+20 | 2.37e+05 | 0.040 | 0.169
+30 | 2.47e+05 | 0.069 | 0.280
+50 | 2.59e+05 | 0.120 | 0.463

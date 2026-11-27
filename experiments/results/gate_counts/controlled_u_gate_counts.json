@@ -1,0 +1,110 @@
+[
+ {
+  "n": 8,
+  "backend": "all-to-all",
+  "two_qubit_gates": 172,
+  "two_qubit_gate_names": [
+   "cx"
+  ],
+  "depth": 292,
+  "two_qubit_depth": 167,
+  "pairs": 28,
+  "transpile_seconds": 0.04
+ },
+ {
+  "n": 8,
+  "backend": "FakeTorino",
+  "two_qubit_gates": 407,
+  "two_qubit_gate_names": [
+   "cz"
+  ],
+  "depth": 995,
+  "two_qubit_depth": 307,
+  "pairs": 28,
+  "transpile_seconds": 0.11
+ },
+ {
+  "n": 8,
+  "backend": "FakeSherbrooke",
+  "two_qubit_gates": 399,
+  "two_qubit_gate_names": [
+   "ecr"
+  ],
+  "depth": 1483,
+  "two_qubit_depth": 310,
+  "pairs": 28,
+  "transpile_seconds": 0.22
+ },
+ {
+  "n": 12,
+  "backend": "all-to-all",
+  "two_qubit_gates": 400,
+  "two_qubit_gate_names": [
+   "cx"
+  ],
+  "depth": 694,
+  "two_qubit_depth": 391,
+  "pairs": 66,
+  "transpile_seconds": 0.04
+ },
+ {
+  "n": 12,
+  "backend": "FakeTorino",
+  "two_qubit_gates": 1137,
+  "two_qubit_gate_names": [
+   "cz"
+  ],
+  "depth": 2321,
+  "two_qubit_depth": 745,
+  "pairs": 66,
+  "transpile_seconds": 0.15
+ },
+ {
+  "n": 12,
+  "backend": "FakeSherbrooke",
+  "two_qubit_gates": 1150,
+  "two_qubit_gate_names": [
+   "ecr"
+  ],
+  "depth": 3339,
+  "two_qubit_depth": 758,
+  "pairs": 66,
+  "transpile_seconds": 0.25
+ },
+ {
+  "n": 16,
+  "backend": "all-to-all",
+  "two_qubit_gates": 718,
+  "two_qubit_gate_names": [
+   "cx"
+  ],
+  "depth": 1261,
+  "two_qubit_depth": 705,
+  "pairs": 120,
+  "transpile_seconds": 0.08
+ },
+ {
+  "n": 16,
+  "backend": "FakeTorino",
+  "two_qubit_gates": 2132,
+  "two_qubit_gate_names": [
+   "cz"
+  ],
+  "depth": 4123,
+  "two_qubit_depth": 1331,
+  "pairs": 120,
+  "transpile_seconds": 0.31
+ },
+ {
+  "n": 16,
+  "backend": "FakeSherbrooke",
+  "two_qubit_gates": 2185,
+  "two_qubit_gate_names": [
+   "ecr"
+  ],
+  "depth": 5712,
+  "two_qubit_depth": 1304,
+  "pairs": 120,
+  "transpile_seconds": 0.21
+ }
+]
