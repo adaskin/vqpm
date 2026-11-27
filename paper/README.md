@@ -15,7 +15,9 @@ figure and table index of the [repository README](../README.md#figure-and-table-
 - `frontmatter.tex`: highlights (not included in `main.tex`).
 - `figures/`: all figures. The run figures of Sec. 2 and the cosine figure are made by the scripts in the
   repository root (`plot_qubit_vs_metrics.py`, `misc_plots.py`, `vqpm.py`); the others by the scripts in
-  `theory_checks/`.
+  `theory_checks/`. The circuit of Sec. 2.1 is `figures/vqpm_circuit.tex` (qcircuit), compiled on its own to
+  `figures/vqpm_circuit.pdf` (`cd figures && latexmk -pdf vqpm_circuit.tex`) and included as an image, so that the
+  HTML version of the paper on arXiv shows it as well.
 - `main.pdf`: the compiled paper.
 - `update_figure_index.py`: writes the figure and table index into the repository README, with the figure, table
   and section numbers of the compiled paper.
@@ -29,4 +31,5 @@ cd ..
 python3 paper/update_figure_index.py      # refresh the numbers in the README index
 ```
 
-On Debian or Ubuntu this needs `texlive-latex-extra texlive-science texlive-pictures lmodern latexmk`.
+On Debian or Ubuntu this needs `texlive-latex-extra texlive-science texlive-pictures lmodern latexmk`. To check the
+HTML version as arXiv makes it, run `latexmlc --format=html5 --dest=html/index.html main.tex` (package `latexml`).

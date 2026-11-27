@@ -1,0 +1,17 @@
+% Circuit of one VQPM iteration (Sec. 2.1 of the paper), compiled to vqpm_circuit.pdf:
+%   cd paper/figures && latexmk -pdf vqpm_circuit.tex
+% It is included as an image so that the HTML version of the paper shows it too.
+\documentclass[border={18pt 3pt 22pt 3pt}]{standalone} % room for the side labels
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{qcircuit}
+\newcommand{\ket}[1]{\ensuremath{\left|#1\right\rangle}}
+\begin{document}
+$\Qcircuit @C=1em @R=0.5em {
+\lstick{\ket{0}} & \gate{H} &\qw & \ctrl{1} & \gate{H} & \meter  & \qw & \rstick{\ket{0}} \\
+\lstick{\ket{0}} & \gate{R_y (\theta_0^{(k-1)})} &\qw & \multigate{2}{\mathcal{U}}& \qw  &  \meter   & \cw  & \cw &\rstick{\theta_0^{(k)}} \\
+\lstick{\ket{0}} & \gate{R_y (\theta_1^{(k-1)})} &\qw & \ghost{U}& \qw & \meter &\cw &\cw &\rstick{\theta_1^{(k)}} \\
+\lstick{\ket{0}} & \gate{R_y (\theta_2^{(k-1)})} &\qw & \ghost{U}& \qw & \meter & \cw & \cw &\rstick{\theta_2^{(k)}} \\
+}$
+\end{document}
